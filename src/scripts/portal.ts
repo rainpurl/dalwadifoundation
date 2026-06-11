@@ -7,19 +7,9 @@
   var OWNER = "pjbrahm369@gmail.com";
   var state: any = { me: null, content: null, users: [] };
 
-  // curated site fonts (all on Google Fonts)
-  var FONTS = [
-    { label: "Literata", family: "Literata", stack: '"Literata", Georgia, serif' },
-    { label: "Fraunces", family: "Fraunces", stack: '"Fraunces", Georgia, serif' },
-    { label: "Cormorant", family: "Cormorant", stack: '"Cormorant", Georgia, serif' },
-    { label: "Lora", family: "Lora", stack: '"Lora", Georgia, serif' },
-    { label: "Playfair Display", family: "Playfair Display", stack: '"Playfair Display", Georgia, serif' },
-    { label: "EB Garamond", family: "EB Garamond", stack: '"EB Garamond", Georgia, serif' },
-    { label: "Source Serif 4", family: "Source Serif 4", stack: '"Source Serif 4", Georgia, serif' },
-    { label: "Manrope", family: "Manrope", stack: '"Manrope", system-ui, sans-serif' },
-    { label: "Inter", family: "Inter", stack: '"Inter", system-ui, sans-serif' },
-    { label: "Work Sans", family: "Work Sans", stack: '"Work Sans", system-ui, sans-serif' },
-  ];
+  // The site font is whatever staff type into Dev tools (any Google Fonts family).
+  // This is only the fallback shown when nothing has been set yet.
+  var DEFAULT_FONT = { label: "IBM Plex Serif", family: "IBM Plex Serif", stack: '"IBM Plex Serif", Georgia, serif' };
   function applyFont(f: any){
     if (!f || !f.stack) return;
     var fam = (f.family || "").trim();
@@ -27,7 +17,7 @@
       var id = "font-" + fam.replace(/\s+/g, "-");
       if (!document.getElementById(id)){
         var l = document.createElement("link"); l.id = id; l.rel = "stylesheet";
-        l.href = "https://fonts.googleapis.com/css2?family=" + fam.replace(/\s+/g, "+") + ":wght@400;500;600;700&display=swap";
+        l.href = "https://fonts.googleapis.com/css2?family=" + fam.replace(/\s+/g, "+") + ":wght@300;400;500;600;700&display=swap";
         document.head.appendChild(l);
       }
     }
@@ -236,13 +226,12 @@
 
   // ---------- DEV TOOLS ----------
   function openDev(){
-    var current = (state.content.settings && state.content.settings.font) || FONTS[0];
-    var fontOpts = FONTS.map(function(f){
-      return '<option value="' + f.family + '"' + (current.family === f.family ? ' selected' : '') + '>' + f.label + '</option>';
-    }).join('');
+    var current = (state.content.settings && state.content.settings.font) || DEFAULT_FONT;
     openSheet('<h2>Dev tools</h2>' +
       '<h3>Site font</h3>' +
-      '<div class="field"><label>Applies across the whole site</label><select id="font-select">' + fontOpts + '</select></div>' +
+      '<div class="field"><label>Google font name — applies across the whole site</label>' +
+        '<input id="font-name" type="text" placeholder="e.g. IBM Plex Serif" value="' + esc(current.family || '') + '"></div>' +
+      '<p class="note">Type any family from Google Fonts, spelled exactly (e.g. “IBM Plex Serif”, “Playfair Display”, “Lora”), then Apply.</p>' +
       '<div class="sheet__row"><button type="button" class="metal metal--sm" id="apply-font">Apply font</button></div>' +
       '<h3>Site logo</h3>' +
       '<div class="field"><label>Replace the logo (SVG) — shows on the homepage and as the favicon</label>' +
@@ -260,9 +249,9 @@
     rebindMetal();
     loadStatus(); loadUsers();
     document.getElementById('apply-font')!.addEventListener('click', function(){
-      var fam = (document.getElementById('font-select') as HTMLSelectElement).value;
-      var chosen = FONTS.filter(function(f){ return f.family === fam; })[0];
-      if (!chosen) return;
+      var fam = (document.getElementById('font-name') as HTMLInputElement).value.trim().replace(/\s+/g, ' ');
+      if (!fam){ toast('Enter a Google font name'); return; }
+      var chosen = { label: fam, family: fam, stack: '"' + fam + '", Georgia, serif' };
       state.content.settings = state.content.settings || {};
       state.content.settings.font = chosen;
       applyFont(chosen);                 // live preview

@@ -1,0 +1,223 @@
+# The Dalwadi Foundation — Project Handoff
+
+_Last updated by Claude at the end of a working session. This document is self-contained: a new chat should be able to pick up the project from this file plus the project zip alone._
+
+---
+
+## 0. Start here (for the next chat)
+
+1. **Upload the project zip** and say: _"Read HANDOFF.md, then help me continue."_
+2. The assistant's first move should be to read this file, then `npm install` + `npm run build` to confirm the project still builds before changing anything.
+3. **Current state:** the GitHub↔Cloudflare connection is fixed — the Pages project was recreated, it builds from Git, and the CSS-columns revert is live. The active items now are (a) **fix the staff sign-in** (Google OAuth is returning `Error 401: invalid_client` — see §10) and (b) **set the live site font to IBM Plex Serif** through the staff portal (see §10, "KV stores content wholesale"). See §11 for the full TODO list.
+
+---
+
+## 1. What this is
+
+A cinematic one-page landing site for **The Dalwadi Foundation**, a nonprofit organized around four "pillars." The bottom navigation bar is the literal *foundation*; on load, a splash screen ("The Dalwadi Foundation" + logo) slides down into that bar, and four **pillar columns** rise from it. Clicking a column sinks it to reveal a card with copy and a link to the partner organization.
+
+**The four pillars and their partners (URLs confirmed correct):**
+
+- **Art** (Community & Art) → House of Devi — `https://www.houseofdevi.org`
+- **Water** (Water Access) → charity: water — `https://www.charitywater.org`
+- **Education** → Conrad N. Hilton College, University of Houston — `https://www.uh.edu/hilton-college/`
+- **Domestic Safety** → Daya (`https://www.dayahouston.org`) + Houston Area Women's Center (`https://www.hawc.org`)
+
+**Key facts**
+
+| | |
+|---|---|
+| GitHub repo | `rainpurl/dalwadifoundation` (private) |
+| Staging URL | `dalwadi-org.katr.es` |
+| Production URL (later) | `dalwadi.org` |
+| Owner / sign-in | `pjbrahm369@gmail.com` (built into the code as the permanent owner; can't be removed) |
+| Cloudflare KV namespace | `dalwadi` (bound to the Functions as `DALWADI_KV`) |
+| Workflow | **No terminal** — everything via github.com (web UI) + the Cloudflare dashboard |
+
+---
+
+## 2. Tech stack & architecture
+
+- **Astro 4.16.18**, `output: 'static'` — the public site is fully static HTML/CSS/JS. Builds with `npm run build` → `dist/`.
+- **Cloudflare Pages** hosts the static site. **Cloudflare Pages Functions** (the `functions/` folder) run the dynamic layer.
+- **Cloudflare KV** (`DALWADI_KV`) is the CMS store: staff edits to pillar copy, About/Contribute text, the team list, the font, the logo, and the authorized-user list all live here and override the built-in defaults at runtime.
+- **Google OAuth** gates the staff portal. Only Google accounts on the authorized list (owner is always allowed) can sign in.
+- Two layers, deployable independently:
+  1. **Public site** — static, works with zero configuration.
+  2. **Staff portal** — needs a Google OAuth app, the KV binding, and secrets (see §6) before it functions.
+
+**How content flows:** the page ships with default copy baked in from `src/data/`. On load, `src/scripts/live.ts` fetches `/api/content` and patches staff-edited values into elements tagged `data-c` / `data-p` / `data-plink` / `data-href`, and applies the saved **font** and **logo**. So text/font edits made in the portal appear on the live site immediately — **but** a brand-new pillar *column* only appears after a rebuild, because the columns are generated at build time from `src/data/pillars.ts`. **Important:** see §10 on how KV content is served *wholesale*, which affects whether edits to baked defaults ever show.
+
+---
+
+## 3. File map
+
+**Config / docs**
+- `package.json`, `package-lock.json` — deps (just `astro`; Three.js was removed, see §9)
+- `astro.config.mjs` — `site: 'https://dalwadi.org'`, static output
+- `SETUP.md` — the original step-by-step deploy guide (some dashboard labels in it are outdated — trust §5)
+- `README.md`, `HANDOFF.md` (this file)
+
+**Pages — `src/pages/`**
+- `index.astro` — the landing page (columns + foundation + brand + phone modal); imports the client scripts
+- `about.astro` — About page + pillar cards + staff bio cards
+- `contribute.astro` — Support page + full-bleed donation embed
+- `staff/index.astro` — staff sign-in / portal entry
+
+**Layouts — `src/layouts/`**
+- `Base.astro` — landing layout (loads the IBM Plex Serif webfont, weights 300–700)
+- `Page.astro` — sub-page layout (persistent nav; same font link)
+
+**Components — `src/components/`**
+- `Towers.astro` — the four pillar columns (**CSS 3D prism**, see §9). Each panel now has title + body + links (no eyebrow).
+- `Foundation.astro` — the bottom "foundation" navbar (logo center, About left, Support right)
+- `Brand.astro` — logo mark + wordmark (splash and navbar)
+- `BackButton.astro` — sub-page back button
+
+**Client scripts — `src/scripts/`**
+- `stage.ts` — landing intro timeline + pillar open/close + **the cursor-turn/glare logic** (`--ry` / `--shine`)
+- `metal.ts` — the shimmering "metal" button cursor effect
+- `live.ts` — patches CMS content (copy, links, font, logo) from `/api/content` into the page
+- `portal.ts` — the staff portal UI (four tiles: Pillars, About, Contribute, Dev tools). The Dev-tools **font picker is now a free-text Google-Font name box** (was a dropdown).
+
+**Styles**
+- `src/styles/global.css` — all styling (root variables, columns/faces, foundation bar, portal, mobile)
+
+**Data (defaults) — `src/data/`**
+- `pillars.ts` — the four pillars + partner links (no `eyebrow` field)
+- `site.ts` — About copy, the team list, Contribute copy + donate link + contact email
+
+**Functions (server) — `functions/`**
+- `_lib/auth.js` — OAuth + session helpers (`requireUser`, etc.)
+- `_lib/kv.js` — KV read/write helpers (`getContent` returns KV content **wholesale** — see §10)
+- `_lib/defaults.js` — **fallback copy of the content** the API serves; mirror of `src/data/` + the default font + the immutable owner (keep in sync — see §10)
+- `_lib/respond.js` — JSON/redirect response helpers
+- `api/auth/login.js`, `callback.js`, `me.js`, `logout.js` — the Google sign-in flow (`/api/auth/callback` is the OAuth redirect target)
+- `api/content.js` — GET/PUT the site + pillar content (the CMS)
+- `api/users.js` — manage the authorized-user list
+- `api/logo.js` — serves an uploaded logo at `/api/logo`
+- `api/status.js` — powers the Dev-tools status dots (see §5); requires sign-in
+
+---
+
+## 4. Current state (as of this handoff)
+
+**Deployment is unblocked.** The Cloudflare Pages project was deleted and recreated, it's connected to Git and building again, and the **CSS-columns revert is live** (`src/scripts/towers3d.ts` was deleted on github.com; the `three` dependency is gone; build is green and homepage JS is ~4.4 kB gzipped, down from ~117 kB on the old WebGL version).
+
+**This session's changes (a fresh batch — see the note below about pushing them):**
+
+- **Pillars are fully opaque.** The column front face previously used a translucent gradient, so the copy/buttons behind it bled through while the column sank. The face gradient is now fully opaque (same silver→royal→navy look, no alpha). The text panel (copy + links) sits *behind* the column (`z-index` already correct) and is revealed purely by the opaque column sinking past it — true occlusion, no show-through.
+- **Font → IBM Plex Serif, Light (300).** Swapped from Literata in all four places it's wired: both layouts' `<link>`, the `--font` CSS variable, and the runtime default in `functions/_lib/defaults.js`. Body text is weight **300 (Light)**; headings/labels stay 600. `live.ts` and `portal.ts` now load the 300 weight too, so Light survives a portal font-switch.
+- **Pillar names: top-positioned + ALL CAPS.** The label on each column now sits centered in the **top half** of the visible face (≈25% line) and renders **all-caps** via CSS (data stays title-case). Reverses the old "no all-caps" rule for the labels (see §9).
+- **Corner rounding reduced slightly.** `--radius` went from `clamp(12px, 2vw, 20px)` to `clamp(8px, 1.5vw, 14px)`. That variable is used only on the pillar faces.
+- **Eyebrows removed.** The little category label (e.g. "Community & Art") is gone from the landing pillar panels, the About-page pillar cards, the data model (`pillars.ts` + `defaults.js`), and the staff portal's pillar editor.
+- **Dev-tools font picker is now a free-text box.** Type any Google Fonts family name and Apply (was a fixed dropdown). See §10 for why this matters.
+
+**The columns:** each is a four-face **opaque** CSS prism (silver→royal→navy gradient front with a moving glare streak, darker navy side faces, a light silver top cap) that turns left/right toward the cursor. Tuning knobs live in `stage.ts` (`TILT_MAX`, and the `--ry`/`--shine` math).
+
+> ⚠️ **This zip is one batch AHEAD of the GitHub repo.** Upload these changed files on github.com and let Cloudflare rebuild. **No file deletions are needed this round** (unlike the WebGL revert). Files touched: `src/styles/global.css`, `src/layouts/Base.astro`, `src/layouts/Page.astro`, `src/scripts/live.ts`, `src/scripts/portal.ts`, `src/components/Towers.astro`, `src/pages/about.astro`, `src/data/pillars.ts`, `functions/_lib/defaults.js`.
+
+---
+
+## 5. The deployment situation — history + recreate reference
+
+**Resolved:** the GitHub repo had been accidentally disconnected from the Cloudflare Pages project. Cloudflare Pages won't let you re-point a repo on an existing project, so the project was **deleted and recreated** (reusing the same name/`.pages.dev` URL). It is now connected to Git and deploying. The KV namespace, OAuth app, and domain registration were unaffected.
+
+The recreate procedure is kept below for reference in case it's ever needed again.
+
+1. **Before deleting**, note the old project's **name** and **`.pages.dev` URL**. Reuse the *exact same name* so it keeps the same `.pages.dev` address (which keeps the Google sign-in redirect working). Confirm the `dalwadi` KV namespace still exists under **Workers & Pages → KV** (or **Storage & Databases → KV**).
+2. **Delete the old project:** open it → **Settings** → bottom → **Delete project**.
+3. **Create the new project:** **Workers & Pages → Create → Pages → Connect to Git** → pick `dalwadifoundation`, name it the same as before. Build settings: **Framework Astro**, **Build command `npm run build`**, **Output directory `dist`** → **Save and Deploy**.
+4. **Re-bind KV:** project → **Settings → Bindings → Add → KV namespace** → Variable name **`DALWADI_KV`**, select the existing `dalwadi` namespace.
+5. **Re-add secrets:** project → **Settings → Variables and Secrets** → Production → add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET` (see §6). Mark secrets as encrypted.
+6. **Redeploy** — variables only take effect on a fresh deploy.
+7. **Re-attach the custom domain:** project → **Custom domains → Set up a domain** → `dalwadi-org.katr.es` (and/or `dalwadi.org`).
+8. **Fix the Google OAuth redirect URI:** Google Cloud Console → **Credentials → your OAuth client → Authorized redirect URIs**. Ensure entries ending in `/api/auth/callback` exist for both `https://<pages-dev-name>.pages.dev` and `https://dalwadi-org.katr.es` (and `dalwadi.org` once live).
+
+**Dev-tools status dots (optional, cosmetic).** The Dev-tools tile shows a Cloudflare and a GitHub status dot. They require sign-in to work (the endpoint is gated). Without tokens they read "Functions live" / "unknown." To light them up, add to the project's Variables and Secrets, then redeploy:
+- **Cloudflare:** `CF_API_TOKEN` (dash → My Profile → API Tokens → Create Custom Token → permission **Account → Cloudflare Pages → Read**), `CF_ACCOUNT_ID` (on any domain's Overview page, API section; also in the dashboard URL), `CF_PROJECT_NAME` (exact Pages project name). The dot then shows the latest deploy stage/status.
+- **GitHub:** `GITHUB_TOKEN` (github.com → Settings → Developer settings → Personal access tokens → Fine-grained → repo access = `dalwadifoundation`, permission **Contents: Read**), `GITHUB_REPO` = `rainpurl/dalwadifoundation`. The dot then shows the last commit hash.
+
+---
+
+## 6. Environment variables & bindings reference
+
+| Name | Type | Required? | Value |
+|---|---|---|---|
+| `DALWADI_KV` | KV binding | **Yes** (for the portal/CMS) | bind to the `dalwadi` namespace |
+| `GOOGLE_CLIENT_ID` | secret | **Yes** (for sign-in) | from the Google OAuth app — full string ending in `.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | secret | **Yes** (for sign-in) | from the Google OAuth app |
+| `SESSION_SECRET` | secret | **Yes** (for sign-in) | a long random string; changing it signs everyone out |
+| `CF_API_TOKEN` | secret | optional (CF status dot) | token with Account → Cloudflare Pages → Read |
+| `CF_ACCOUNT_ID` | var | optional (CF status dot) | your Cloudflare account ID |
+| `CF_PROJECT_NAME` | var | optional (CF status dot) | the exact Pages project name |
+| `GITHUB_TOKEN` | secret | optional (GH status dot) | fine-grained PAT, Contents: Read on the repo |
+| `GITHUB_REPO` | var | optional (GH status dot) | `rainpurl/dalwadifoundation` |
+
+---
+
+## 7. Content & placeholders to finish before launch
+
+- **Partner URLs** in `src/data/pillars.ts` — ✅ confirmed correct.
+- **Team** in `src/data/site.ts` — currently three **Lorem Ipsum** placeholder members (no photos). To be filled in **later via the staff portal's About tile** (name, title, bio, headshot).
+- **Donate link** — `site.ts` `donateUrl: "#"` is still a placeholder. (Note: the portal's Contribute tile currently opens `zeffy.com`; reconcile this when finalizing the donate flow.)
+- **Contact email** — `site.ts` `email: "hello@dalwadi.org"` is still a placeholder.
+- **Logo** — the brand mark currently uses `public/logo.png` (a working/placeholder mark). The brief calls for a specific stylized capital **D**. Swap via the portal's Dev-tools logo uploader, or in code (upload to `public/`, edit `Brand.astro`, keep the `brandmark` class so the intro animation still works).
+
+---
+
+## 8. Deployment workflow (no terminal)
+
+- The user works entirely through **github.com (web UI)** and the **Cloudflare dashboard** — no git CLI.
+- **Hand back changed files as a zip** named with a couple of words describing the change, rooted at the project root (paths like `src/...`, `package.json`). The user unzips and drags the *contents* onto the repo (Add file → Upload files), which updates those files; committing triggers an automatic Cloudflare rebuild.
+- **`package.json` must stay at the repo top level.** When uploading the full project, drag the folder's *contents*, not the folder.
+- **GitHub uploads add/update but never delete.** Any file removal must be done by hand on github.com (open file → ⋯ / trash → Delete).
+- Editing an existing file: open it on github.com → pencil icon → edit → Commit (auto-redeploys).
+
+---
+
+## 9. Design decisions log — don't silently undo these
+
+- **CSS columns, not WebGL.** The WebGL/Three.js columns were tried and rejected; the columns are intentionally CSS now. Don't reintroduce Three.js.
+- **Opaque pillars.** The column faces are fully opaque on purpose — the copy/links panel sits behind each column and is revealed only as the opaque column sinks past it (true occlusion; no fade, no show-through). Don't reintroduce alpha on the front face.
+- **Font: IBM Plex Serif, Light (300) body.** It's the single swappable site font (`--font`). The Dev-tools tile has a **free-text Google-Font name box** to change it live. Headings/labels are 600.
+- **Pillar labels are ALL CAPS** and sit in the **top half** of each column face. (This intentionally retires the earlier "no all-caps" rule, which applied to the old Literata labels.) Other copy (titles, body, About/Contribute) stays title/sentence case.
+- **No eyebrows on pillars.** The small category label was removed from the pillar panels and About cards and from the data model/portal. Don't add it back without a reason.
+- **No gold accents** — the palette is deep/royal blues + ivory + silver. Buttons use a "metal"/silver shimmer.
+- **Slightly reduced corner rounding** on the columns (`--radius` clamp(8–14px)).
+- **Floor-line striations** are present on the column front faces (faint vertical lines). Easy to drop (one `::after` rule) if a cleaner look is wanted.
+- **Splash screen shows on first load only**, not when navigating back to the homepage from a sub-page.
+- **Persistent bottom "foundation" bar** on every page; floating Back / Staff buttons rather than a top bar.
+- **Mobile:** narrow screens shrink the columns to static (no animation); tapping one lifts it slightly and shows its info in a centered card. The pillar label stays centered (vertical) on mobile.
+- **Staff "login" button** is ~25% opacity until hovered.
+
+---
+
+## 10. Known issues / cautions
+
+- **KV stores the content object WHOLESALE.** `functions/_lib/kv.js` `getContent` returns the entire KV `content` key when it exists (it is *not* deep-merged with `defaults.js`). Consequence: once anything has been saved in the portal, the API serves that saved snapshot, and **changes to baked defaults (copy, pillars, font) in `src/data/` or `defaults.js` will NOT appear at runtime until they're re-saved through the portal** (or the KV `content` key is cleared). This is exactly why a stale saved font kept overriding the new IBM Plex Serif default — the old Dev-tools dropdown had written a font into KV. **To set the live font:** sign in → Dev tools → Site font → type `IBM Plex Serif` → Apply. (Baked CSS/markup changes like the opaque faces, all-caps labels, and radius are *not* in KV, so those show as soon as the build deploys.)
+- **Staff sign-in: `Error 401: invalid_client`** (current). This is a **client-ID** problem, not a redirect-URI one (a redirect problem shows as `Error 400: redirect_uri_mismatch`). Almost certainly the `GOOGLE_CLIENT_ID` re-entered into the recreated Pages project doesn't match a real OAuth client. Fix: (1) in Google Cloud Console → Credentials, copy the OAuth client's **Client ID** exactly (full `…apps.googleusercontent.com`, no whitespace); (2) in the Pages project → Settings → Variables and Secrets → Production, make `GOOGLE_CLIENT_ID` match, and confirm `GOOGLE_CLIENT_SECRET` + `SESSION_SECRET` are present; (3) **redeploy** (vars only apply on a fresh deploy). Then confirm the redirect URIs include `/api/auth/callback` for the `.pages.dev` and `dalwadi-org.katr.es` hosts.
+- **Auth/CMS is v1 and has not been tested against live Google/Cloudflare.** Treat the sign-in → edit → save loop as something to test and harden once sign-in works.
+- **`functions/_lib/defaults.js` mirrors `src/data/`.** If you change built-in defaults in `src/data/pillars.ts` or `src/data/site.ts`, update `defaults.js` to match (and remember the wholesale-KV caveat above).
+- **New pillars:** editing existing pillar text shows live immediately, and a new pillar shows on the About page right away, but a new animated *column* on the landing page only appears after a rebuild (columns are generated at build time).
+- **Cloudflare dashboard labels drift.** SETUP.md uses older labels; the current dashboard uses **Settings → Bindings** and **Settings → Variables and Secrets**. Trust §5 over SETUP.md where they disagree.
+
+---
+
+## 11. Outstanding TODOs (roughly prioritized)
+
+1. ✅ **Recreate the Cloudflare Pages project** so it builds from Git again — done.
+2. ✅ **Push the CSS-columns revert** and delete `towers3d.ts` — done; CSS columns are live.
+3. **Push this session's batch** (opaque pillars, IBM Plex Serif Light, all-caps top-positioned labels, smaller radius, eyebrow removal, font textbox) and redeploy. No deletions needed (§4).
+4. **Fix the staff sign-in** — resolve `Error 401: invalid_client` (verify `GOOGLE_CLIENT_ID` + redeploy; §10).
+5. **Set the live site font to IBM Plex Serif** via Dev tools → Site font box, because KV may still hold an older font (§10).
+6. **(Optional) Set up the Dev-tools status dots** (§5) — needs sign-in working first.
+7. **Finish content** (§7): team bios/photos (via portal), donate link, contact email, real logo. (Partner URLs done.)
+8. **Test and harden the auth/CMS loop** (§10) once sign-in works.
+9. **Custom domain → production:** move from `dalwadi-org.katr.es` to `dalwadi.org` when ready, and add the production OAuth redirect URI.
+
+---
+
+## 12. Suggested message to start the next chat
+
+> I'm continuing work on The Dalwadi Foundation site. I've uploaded the full project zip and HANDOFF.md. Please read HANDOFF.md first, then confirm the build is green. Current status: [paste what you've done — e.g. "I pushed the latest batch and fixed the OAuth client ID; sign-in works now" or "still seeing Error 401 invalid_client on sign-in"]. Next I want to [your goal].
