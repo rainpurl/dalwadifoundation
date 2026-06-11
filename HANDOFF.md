@@ -104,7 +104,12 @@ A cinematic one-page landing site for **The Dalwadi Foundation**, a nonprofit or
 
 **Deployment is unblocked.** The Cloudflare Pages project was deleted and recreated, it's connected to Git and building again, and the **CSS-columns revert is live** (`src/scripts/towers3d.ts` was deleted on github.com; the `three` dependency is gone; build is green and homepage JS is ~4.4 kB gzipped, down from ~117 kB on the old WebGL version).
 
-**This session's changes.** Three batches; all still need pushing (see the note below). Newest first.
+**This session's changes.** Four batches; all still need pushing (see the note below). Newest first.
+
+**Batch 4 - swipe layout + pillar lines:**
+
+- **Page order corrected to Support (left) | Home (center) | About (right).** The swipe already animated Support-from-the-left and About-from-the-right, but the nav tabs were the other way round (About left, Support right), so a tab slid the screen against its own side. Fixed by swapping the nav tabs in `Foundation.astro` to Support-left / About-right, and making the slide code self-consistent: the order map in both layouts is now `{ '/contribute': 0, '/': 1, '/about': 2 }` and the `::view-transition-*(root)` animations are back to canonical (to a higher index pans left / new from right). Net on-screen result: each tab slides the screen toward its own side. If it ever reads inverted, swap the default and `.nav-back` animation pairs (one edit, noted in the CSS).
+- **Removed the faint horizontal lines on the pillars** (the `repeating-linear-gradient` striations on `.face--front::after`). The moving glare on the front face stays.
 
 **Batch 3 - tweaks:**
 
@@ -135,7 +140,7 @@ A cinematic one-page landing site for **The Dalwadi Foundation**, a nonprofit or
 
 **The columns:** each is a four-face **opaque** CSS prism (silver→royal→navy gradient front with a moving glare streak, darker navy side faces, a light silver top cap) that turns left/right toward the cursor. Tuning knobs live in `stage.ts` (`TILT_MAX`, and the `--ry`/`--shine` math).
 
-> ⚠️ **This zip is AHEAD of the GitHub repo** (three batches of changes). Upload these changed files on github.com and let Cloudflare rebuild. **No file deletions are needed** (unlike the WebGL revert). Files touched across the batches: `astro.config.mjs`, `src/styles/global.css`, `src/layouts/Base.astro`, `src/layouts/Page.astro`, `src/pages/index.astro`, `src/pages/about.astro`, `src/pages/contribute.astro`, `src/scripts/stage.ts`, `src/scripts/metal.ts`, `src/scripts/live.ts`, `src/scripts/portal.ts`, `src/components/Towers.astro`, `src/data/pillars.ts`, `src/data/site.ts`, `functions/_lib/defaults.js`, and `HANDOFF.md`.
+> ⚠️ **This zip is AHEAD of the GitHub repo** (three batches of changes). Upload these changed files on github.com and let Cloudflare rebuild. **No file deletions are needed** (unlike the WebGL revert). Files touched across the batches: `astro.config.mjs`, `src/styles/global.css`, `src/layouts/Base.astro`, `src/layouts/Page.astro`, `src/pages/index.astro`, `src/pages/about.astro`, `src/pages/contribute.astro`, `src/components/Foundation.astro`, `src/scripts/stage.ts`, `src/scripts/metal.ts`, `src/scripts/live.ts`, `src/scripts/portal.ts`, `src/components/Towers.astro`, `src/data/pillars.ts`, `src/data/site.ts`, `functions/_lib/defaults.js`, and `HANDOFF.md`.
 
 ---
 
@@ -205,9 +210,9 @@ The recreate procedure is kept below for reference in case it's ever needed agai
 - **No eyebrows on pillars.** The small category label was removed from the pillar panels and About cards and from the data model/portal. Don't add it back without a reason.
 - **No gold accents** - the palette is deep/royal blues + ivory + silver. Buttons use a "metal"/silver shimmer.
 - **Slightly reduced corner rounding** on the columns (`--radius` clamp(8-14px)).
-- **Floor-line striations** are present on the column front faces (faint vertical lines). Easy to drop (one `::after` rule) if a cleaner look is wanted.
+- **No striation lines on the pillars.** The faint repeating lines on the front face were removed; only the moving glare remains. Don't add them back.
 - **Splash screen shows on the first genuine page load only**, never when sliding back to the homepage in-session. Under View Transitions this is detected with a first-load flag (set on the first client navigation), which replaced the old sessionStorage approach.
-- **Persistent bottom "foundation" bar** on every page; floating Back / Staff buttons rather than a top bar.
+- **Persistent bottom "foundation" bar** on every page (no top bar). Tabs are ordered Support (left), logo/Home (center), About (right) to match the page-slide directions. The Back button was removed from the sub-pages; only the staff page keeps one.
 - **Mobile:** narrow screens shrink the columns to static (no animation); tapping one lifts it slightly and shows its info in a centered card. The pillar label stays centered (vertical) on mobile.
 - **Staff "login" button** is ~25% opacity until hovered.
 - **Page navigation slides; the nav bar holds still.** Built on Astro View Transitions. Each page keeps its own full-viewport layout (so the splash positioning is untouched), the nav bar is named `sitenav` so it stays put, and a small `astro:before-preparation` hook picks the slide direction from a fixed page order (About 0, Home 1, Support 2). `/staff` is intentionally a full reload (`data-astro-reload`) so the portal keeps initializing once per load. Because module scripts run only once under View Transitions, `stage.ts`, `metal.ts`, and `live.ts` re-init on `astro:page-load`; `stage.ts` also uses an AbortController so its window/document listeners never accumulate across navigations. Don't move init back to plain top-level module scope, or the scripts will go dead after the first slide.

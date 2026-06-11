@@ -177,11 +177,6 @@ a{ color: inherit; }
   background-size: 280% 100%; background-position: var(--shine, 50%) 0;
   mix-blend-mode: screen; transition: background-position .3s var(--ease-out);
 }
-.face--front::after{ /* faint vertical striations */
-  content:""; position:absolute; inset:0;
-  background: repeating-linear-gradient(180deg, rgba(255,255,255,.07) 0 1px, transparent 1px 21px);
-  opacity:.5;
-}
 .face--left{
   width: var(--td); height: var(--th);
   margin-left: calc(var(--td) / -2); margin-top: calc(var(--th) / -2);
@@ -460,10 +455,10 @@ html.fonts-loading .wordmark{ visibility: hidden; }
 }
 
 /* =========================================================
-   PAGE SLIDE between About | Home | Support (View Transitions)
-   Forward (toward Support, on the right) slides the screen left;
-   going back (toward About, on the left) slides it right. The nav
-   bar carries view-transition-name "sitenav", so it stays put.
+   PAGE SLIDE between Support | Home | About (View Transitions)
+   Pages sit left to right as Support, Home, About. The nav bar
+   carries view-transition-name "sitenav", so it stays put while
+   the rest of the screen slides in the matching direction.
    ========================================================= */
 @media (prefers-reduced-motion: no-preference){
   ::view-transition-old(root),
@@ -471,13 +466,14 @@ html.fonts-loading .wordmark{ visibility: hidden; }
     animation-duration: .55s; animation-timing-function: cubic-bezier(.65,0,.2,1);
     animation-fill-mode: both;
   }
-  /* Direction is keyed to page order (About 0, Home 1, Support 2): navigating to a
-     higher index uses the default pair, a lower index uses the .nav-back pair. If the
-     on-screen direction ever needs reversing, swap these two pairs. */
-  ::view-transition-old(root){ animation-name: slide-out-right; }
-  ::view-transition-new(root){ animation-name: slide-in-left; }
-  html.nav-back::view-transition-old(root){ animation-name: slide-out-left; }
-  html.nav-back::view-transition-new(root){ animation-name: slide-in-right; }
+  /* Page order: Support 0 (left), Home 1, About 2 (right). Navigating to a higher index
+     (rightward, e.g. to About) pans the screen left with the new page entering from the
+     right; a lower index (leftward, e.g. to Support) does the reverse. If the on-screen
+     direction is ever inverted, swap the default pair with the .nav-back pair. */
+  ::view-transition-old(root){ animation-name: slide-out-left; }
+  ::view-transition-new(root){ animation-name: slide-in-right; }
+  html.nav-back::view-transition-old(root){ animation-name: slide-out-right; }
+  html.nav-back::view-transition-new(root){ animation-name: slide-in-left; }
 }
 @keyframes slide-out-left  { from { transform: translateX(0); }      to { transform: translateX(-100%); } }
 @keyframes slide-in-right  { from { transform: translateX(100%); }   to { transform: translateX(0); } }

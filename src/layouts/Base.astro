@@ -48,7 +48,7 @@ const {
     <script is:inline>
       (function(){
         if (window.__dalwadiNav) return; window.__dalwadiNav = true;
-        var order = { '/': 1, '/about': 0, '/contribute': 2 };
+        var order = { '/contribute': 0, '/': 1, '/about': 2 }; // Support left, Home center, About right
         function path(u){ try { return (u && u.pathname) ? u.pathname : new URL(u, location.href).pathname; } catch(e){ return '/'; } }
         function idx(u){ var p = path(u).replace(/\/+$/, ''); if (!p) p = '/'; return (p in order) ? order[p] : 1; }
         document.addEventListener('astro:before-preparation', function(e){
