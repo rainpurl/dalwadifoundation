@@ -14,7 +14,6 @@ import { pillars } from '../data/pillars';
     {pillars.map((p, i) => (
       <div class="tower" data-pillar={p.key} data-i={i} style={`--i:${i}`}>
         <div class="tower__panel" id={`panel-${p.key}`} role="group" aria-labelledby={`${p.key}-title`}>
-          <p class="tp__eyebrow" data-p={`${p.key}.eyebrow`}>{p.eyebrow}</p>
           <h2 class="tp__title" id={`${p.key}-title`} data-p={`${p.key}.title`}>{p.title}</h2>
           <p class="tp__body" data-p={`${p.key}.body`}>{p.body}</p>
           <div class="tp__actions">

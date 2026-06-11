@@ -14,14 +14,14 @@
   --line:     rgba(20,34,63,.12);
 
   /* one swappable site font (Dev tools can change --font live) */
-  --font: "Literata", Georgia, "Times New Roman", serif;
+  --font: "IBM Plex Serif", Georgia, "Times New Roman", serif;
   --display: var(--font);
   --sans: var(--font);
 
   --tw: clamp(64px, 20vw, 232px);   /* tower width  */
   --th: clamp(300px, 75svh, 760px); /* tower height */
   --td: clamp(22px, 5vw, 60px);     /* tower depth  */
-  --radius: clamp(12px, 2vw, 20px);
+  --radius: clamp(8px, 1.5vw, 14px);
   --top-mid: clamp(30px, 4.6vw, 42px);
 
   --nav-h: 80px;
@@ -163,8 +163,8 @@ a{ color: inherit; }
   margin-left: calc(var(--tw) / -2); margin-top: calc(var(--th) / -2);
   transform: translateZ(calc(var(--td) / 2));
   background: linear-gradient(180deg,
-    rgba(236,242,250,.92) 0%, rgba(176,198,230,.6) 12%,
-    rgba(47,86,160,.55) 30%, var(--royal) 52%, var(--navy) 100%);
+    #ecf2fa 0%, #b0c6e6 12%,
+    #2f56a0 30%, var(--royal) 52%, var(--navy) 100%);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 3px 10px rgba(255,255,255,.22);
 }
 .face--front::before{ /* moving glare (driven by --shine) */
@@ -201,15 +201,16 @@ a{ color: inherit; }
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.3);
 }
 
-/* tower label — horizontal, title case (no caps); vertical only when very narrow */
+/* tower label — all caps, centered in the top half of the visible column face;
+   vertical only when very narrow (mobile keeps it centered) */
 .tower__name{
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2;
-  white-space: nowrap; font-family: var(--font); font-weight: 600;
-  font-size: clamp(.9rem, 1.6vw, 1.16rem); letter-spacing: .02em;
+  position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); z-index: 2;
+  white-space: nowrap; font-family: var(--font); font-weight: 600; text-transform: uppercase;
+  font-size: clamp(.9rem, 1.6vw, 1.16rem); letter-spacing: .08em;
   color: var(--ivory); text-shadow: 0 1px 4px rgba(0,0,0,.55); pointer-events: none;
 }
 @media (max-width: 700px){
-  .tower__name{ transform: translate(-50%, -50%) rotate(-90deg); letter-spacing: .04em; font-size: .92rem; }
+  .tower__name{ top: 50%; transform: translate(-50%, -50%) rotate(-90deg); letter-spacing: .12em; font-size: .92rem; }
 }
 
 /* text behind the tower — ALWAYS rendered, never faded. The opaque tower hides
@@ -223,7 +224,6 @@ a{ color: inherit; }
 }
 .tower.is-hover .tower__panel, .tower:focus-within .tower__panel, .tower.is-open .tower__panel{ visibility: visible; pointer-events: auto; }
 .towers.is-solo .tower.is-open .tower__panel{ width: min(330px, 86vw); }
-.tp__eyebrow{ margin: 0 0 .5em; font-weight: 600; font-size: .82rem; letter-spacing: .04em; color: var(--eyebrow); }
 .tp__title{ margin: 0 0 .35em; font-family: var(--font); font-weight: 600; font-size: clamp(1.3rem, 2.6vw, 1.6rem); line-height: 1.08; color: var(--navy); }
 .tp__body{ margin: 0 0 1.15em; font-size: .92rem; line-height: 1.55; color: var(--ink-soft); }
 .tp__actions{ display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }

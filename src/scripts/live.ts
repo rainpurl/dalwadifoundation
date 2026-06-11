@@ -16,7 +16,7 @@
       var id = 'font-' + fam.replace(/\s+/g, '-');
       if (!document.getElementById(id)){
         var l = document.createElement('link'); l.id = id; l.rel = 'stylesheet';
-        l.href = 'https://fonts.googleapis.com/css2?family=' + fam.replace(/\s+/g, '+') + ':wght@400;500;600;700&display=swap';
+        l.href = 'https://fonts.googleapis.com/css2?family=' + fam.replace(/\s+/g, '+') + ':wght@300;400;500;600;700&display=swap';
         document.head.appendChild(l);
       }
     }

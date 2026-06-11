@@ -113,7 +113,7 @@
     renderPillars(state.content.pillars || []);
     document.getElementById('cancel')!.addEventListener('click', closeSheet);
     document.getElementById('add-pillar')!.addEventListener('click', function(){
-      var arr = readPillars(); arr.push({ key: 'pillar' + (arr.length + 1), name: '', eyebrow: '', title: '', body: '', links: [] }); renderPillars(arr);
+      var arr = readPillars(); arr.push({ key: 'pillar' + (arr.length + 1), name: '', title: '', body: '', links: [] }); renderPillars(arr);
     });
     document.getElementById('save-pillars')!.addEventListener('click', function(){
       state.content.pillars = readPillars(); saveContent(closeSheet);
@@ -124,7 +124,6 @@
     box.innerHTML = arr.map(function(p, i){
       return '<div class="subblock" data-pi="' + i + '">' +
         '<div class="field"><label>Name (tower label)</label><input data-f="name" value="' + esc(p.name) + '"></div>' +
-        '<div class="field"><label>Eyebrow</label><input data-f="eyebrow" value="' + esc(p.eyebrow) + '"></div>' +
         '<div class="field"><label>Title</label><input data-f="title" value="' + esc(p.title) + '"></div>' +
         '<div class="field"><label>Body</label><textarea data-f="body">' + esc(p.body) + '</textarea></div>' +
         '<label>Links</label><div class="links">' +
@@ -160,7 +159,7 @@
         return { label: lab, href: href };
       }).filter(function(l: any){ return l.label || l.href; });
       var key = (f.name || 'pillar').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'pillar';
-      return { key: key, name: f.name, eyebrow: f.eyebrow, title: f.title, body: f.body, links: links };
+      return { key: key, name: f.name, title: f.title, body: f.body, links: links };
     });
   }
 
