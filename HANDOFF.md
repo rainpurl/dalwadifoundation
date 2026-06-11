@@ -104,7 +104,18 @@ A cinematic one-page landing site for **The Dalwadi Foundation**, a nonprofit or
 
 **Deployment is unblocked.** The Cloudflare Pages project was deleted and recreated, it's connected to Git and building again, and the **CSS-columns revert is live** (`src/scripts/towers3d.ts` was deleted on github.com; the `three` dependency is gone; build is green and homepage JS is ~4.4 kB gzipped, down from ~117 kB on the old WebGL version).
 
-**This session's changes.** Two batches; both still need pushing (see the note below). Newest first.
+**This session's changes.** Three batches; all still need pushing (see the note below). Newest first.
+
+**Batch 3 - tweaks:**
+
+- **Slide direction flipped** so it matches the page's spatial side (page order About 0, Home 1, Support 2). The mapping lives in the `::view-transition-*(root)` rules in `global.css`; if it ever needs reversing again, swap the default pair with the `.nav-back` pair (one edit).
+- **Back arrow removed from the sub-pages.** `BackButton` was dropped from `Page.astro` (the persistent nav bar already returns home, and its left-pointing arrow read as the wrong direction). `BackButton.astro` itself stays because the staff page still uses it. The staff-login button (top-right, About only) is untouched, so nothing collides.
+- **Pillar info stays put while the column covers it.** `.tower__panel` no longer hides the instant you close; it keeps `visibility` for 2s (matching the raise) via `transition: visibility 0s 2s`, so the rising opaque column visibly covers it. (It still starts hidden, so it never shows during the intro rise or at rest.)
+- **Splash font no longer swaps.** The wordmark is hidden until IBM Plex Serif is loaded: an inline head script toggles a `fonts-loading` class on `<html>` (cleared on font load, on a 1.5s timeout, and never set if JS is off, so it fails open) and `html.fonts-loading .wordmark` is hidden.
+- **Support page background is `#003566`** (the embed's own background), set in `contribute.astro`, so there's no color flash before the Zeffy iframe paints.
+- **Column tilt** reduced again, 14 to 10 degrees (`TILT_MAX` in `stage.ts`).
+- **Pillar raise (close)** slowed from 1.2s to 2s (base `.tower__lift` transition).
+- **Double logo on splash fixed.** The foundation-bar logo is hidden on the homepage again (`.app .foundation__logo{visibility:hidden}`), so only the flying splash mark shows during the intro. (This reverts the coincident-logo experiment from Batch 2; the page-slide still reveals the bar logo via the named-nav morph.)
 
 **Batch 2 - navigation, motion, punctuation:**
 
@@ -124,7 +135,7 @@ A cinematic one-page landing site for **The Dalwadi Foundation**, a nonprofit or
 
 **The columns:** each is a four-face **opaque** CSS prism (silver→royal→navy gradient front with a moving glare streak, darker navy side faces, a light silver top cap) that turns left/right toward the cursor. Tuning knobs live in `stage.ts` (`TILT_MAX`, and the `--ry`/`--shine` math).
 
-> ⚠️ **This zip is AHEAD of the GitHub repo** (two batches of changes). Upload these changed files on github.com and let Cloudflare rebuild. **No file deletions are needed** (unlike the WebGL revert). Files touched across both batches: `astro.config.mjs`, `src/styles/global.css`, `src/layouts/Base.astro`, `src/layouts/Page.astro`, `src/pages/index.astro`, `src/pages/about.astro`, `src/scripts/stage.ts`, `src/scripts/metal.ts`, `src/scripts/live.ts`, `src/scripts/portal.ts`, `src/components/Towers.astro`, `src/data/pillars.ts`, `src/data/site.ts`, `functions/_lib/defaults.js`, and `HANDOFF.md`.
+> ⚠️ **This zip is AHEAD of the GitHub repo** (three batches of changes). Upload these changed files on github.com and let Cloudflare rebuild. **No file deletions are needed** (unlike the WebGL revert). Files touched across the batches: `astro.config.mjs`, `src/styles/global.css`, `src/layouts/Base.astro`, `src/layouts/Page.astro`, `src/pages/index.astro`, `src/pages/about.astro`, `src/pages/contribute.astro`, `src/scripts/stage.ts`, `src/scripts/metal.ts`, `src/scripts/live.ts`, `src/scripts/portal.ts`, `src/components/Towers.astro`, `src/data/pillars.ts`, `src/data/site.ts`, `functions/_lib/defaults.js`, and `HANDOFF.md`.
 
 ---
 
@@ -200,9 +211,10 @@ The recreate procedure is kept below for reference in case it's ever needed agai
 - **Mobile:** narrow screens shrink the columns to static (no animation); tapping one lifts it slightly and shows its info in a centered card. The pillar label stays centered (vertical) on mobile.
 - **Staff "login" button** is ~25% opacity until hovered.
 - **Page navigation slides; the nav bar holds still.** Built on Astro View Transitions. Each page keeps its own full-viewport layout (so the splash positioning is untouched), the nav bar is named `sitenav` so it stays put, and a small `astro:before-preparation` hook picks the slide direction from a fixed page order (About 0, Home 1, Support 2). `/staff` is intentionally a full reload (`data-astro-reload`) so the portal keeps initializing once per load. Because module scripts run only once under View Transitions, `stage.ts`, `metal.ts`, and `live.ts` re-init on `astro:page-load`; `stage.ts` also uses an AbortController so its window/document listeners never accumulate across navigations. Don't move init back to plain top-level module scope, or the scripts will go dead after the first slide.
-- **Gentler column rotation:** `TILT_MAX` is 14 degrees (was 20); the rest tilt stays at -10 degrees.
-- **Pillar close is slower than open** (1.2s rising up vs .6s sinking down) on purpose: brisk to reveal, graceful to hide. The base `.tower__lift` transition governs the upward/close direction.
-- **Foundation-bar logo is always visible** and sits coincident with the settled brand logo on the homepage, so a slide reveals it seamlessly. (It used to be hidden on the homepage.)
+- **Gentler column rotation:** `TILT_MAX` is 10 degrees (was 20, then 14); the rest tilt stays at -10 degrees.
+- **Pillar close is slower than open** (2s rising up vs .6s sinking down) on purpose: brisk to reveal, slow and deliberate to hide. The base `.tower__lift` transition governs the upward/close direction. The panel behind it keeps `visibility` for the full 2s (`transition: visibility 0s 2s`) so the rising column visibly covers the info instead of it vanishing first.
+- **Foundation-bar logo is hidden on the homepage** (`.app .foundation__logo{visibility:hidden}`) because the animated splash mark occupies that spot; this prevents a second logo showing while the mark flies down. The page-slide still reveals the bar logo via the named-nav morph. (Don't remove this hide, or the double-logo returns.)
+- **Splash wordmark waits for its font.** It's hidden until IBM Plex Serif loads (`html.fonts-loading .wordmark`), driven by an inline head script, to avoid a font swap mid-animation. Keep the inline script and the rule together.
 - **No em-dashes anywhere** (hard rule): copy, comments, and docs use commas/colons/periods or plain hyphens.
 
 ---

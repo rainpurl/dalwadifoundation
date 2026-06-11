@@ -80,7 +80,7 @@
     //      same geometry pass - one listener, one rAF. ----
     if (hoverCapable && !reduce){
       var hraf = 0, hx = -1, hy = -1;
-      var TILT_MAX = 14; // degrees of left/right turn at the screen edge (gentler)
+      var TILT_MAX = 10; // degrees of left/right turn at the screen edge (subtle)
       var setTilt = function(t: any, ry: string, shine: string){ t.style.setProperty('--ry', ry); t.style.setProperty('--shine', shine); };
       var restTilt = function(){ for (var k = 0; k < towers.length; k++) setTilt(towers[k], '-10deg', '50%'); };
       var hoverTest = function(){

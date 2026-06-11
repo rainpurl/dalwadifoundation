@@ -21,6 +21,20 @@ const {
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#0c1a40" />
+    <script is:inline>
+      (function(){
+        var el = document.documentElement; el.classList.add('fonts-loading');
+        var done = function(){ el.classList.remove('fonts-loading'); };
+        try {
+          if (document.fonts && document.fonts.load) {
+            Promise.race([
+              Promise.all([document.fonts.load('600 1em "IBM Plex Serif"'), document.fonts.load('300 1em "IBM Plex Serif"')]),
+              new Promise(function(r){ setTimeout(r, 1500); })
+            ]).then(done, done);
+          } else { done(); }
+        } catch (e) { done(); }
+      })();
+    </script>
     <link rel="icon" href="/favicon.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
