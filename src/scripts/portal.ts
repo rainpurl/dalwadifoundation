@@ -7,6 +7,33 @@
   var OWNER = "pjbrahm369@gmail.com";
   var state: any = { me: null, content: null, users: [] };
 
+  // curated site fonts (all on Google Fonts)
+  var FONTS = [
+    { label: "Literata", family: "Literata", stack: '"Literata", Georgia, serif' },
+    { label: "Fraunces", family: "Fraunces", stack: '"Fraunces", Georgia, serif' },
+    { label: "Cormorant", family: "Cormorant", stack: '"Cormorant", Georgia, serif' },
+    { label: "Lora", family: "Lora", stack: '"Lora", Georgia, serif' },
+    { label: "Playfair Display", family: "Playfair Display", stack: '"Playfair Display", Georgia, serif' },
+    { label: "EB Garamond", family: "EB Garamond", stack: '"EB Garamond", Georgia, serif' },
+    { label: "Source Serif 4", family: "Source Serif 4", stack: '"Source Serif 4", Georgia, serif' },
+    { label: "Manrope", family: "Manrope", stack: '"Manrope", system-ui, sans-serif' },
+    { label: "Inter", family: "Inter", stack: '"Inter", system-ui, sans-serif' },
+    { label: "Work Sans", family: "Work Sans", stack: '"Work Sans", system-ui, sans-serif' },
+  ];
+  function applyFont(f: any){
+    if (!f || !f.stack) return;
+    var fam = (f.family || "").trim();
+    if (fam){
+      var id = "font-" + fam.replace(/\s+/g, "-");
+      if (!document.getElementById(id)){
+        var l = document.createElement("link"); l.id = id; l.rel = "stylesheet";
+        l.href = "https://fonts.googleapis.com/css2?family=" + fam.replace(/\s+/g, "+") + ":wght@400;500;600;700&display=swap";
+        document.head.appendChild(l);
+      }
+    }
+    document.documentElement.style.setProperty("--font", f.stack);
+  }
+
   function esc(s: any){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" } as any)[c]; }); }
   function api(path: string, opts?: any){ return fetch(path, Object.assign({ credentials: "same-origin", headers: { "Content-Type": "application/json" } }, opts || {})); }
   function toast(msg: string){ var t = document.getElementById('toast')!; t.textContent = msg; t.classList.add('is-on'); setTimeout(function(){ t.classList.remove('is-on'); }, 2200); }
@@ -25,7 +52,7 @@
   api('/api/auth/me').then(function(r){ return r.ok ? r.json() : null; }).then(function(me){
     state.me = me && me.email ? me.email : null;
     if (!state.me) return renderSignin();
-    return api('/api/content').then(function(r){ return r.json(); }).then(function(c){ state.content = c; renderPortal(); });
+    return api('/api/content').then(function(r){ return r.json(); }).then(function(c){ state.content = c; applyFont(c && c.settings && c.settings.font); renderPortal(); });
   }).catch(function(){ renderSignin(); });
 
   function renderSignin(){
@@ -176,7 +203,14 @@
 
   // ---------- DEV TOOLS ----------
   function openDev(){
+    var current = (state.content.settings && state.content.settings.font) || FONTS[0];
+    var fontOpts = FONTS.map(function(f){
+      return '<option value="' + f.family + '"' + (current.family === f.family ? ' selected' : '') + '>' + f.label + '</option>';
+    }).join('');
     openSheet('<h2>Dev tools</h2>' +
+      '<h3>Site font</h3>' +
+      '<div class="field"><label>Applies across the whole site</label><select id="font-select">' + fontOpts + '</select></div>' +
+      '<div class="sheet__row"><button type="button" class="metal metal--sm" id="apply-font">Apply font</button></div>' +
       '<h3>Service status</h3><div id="status"><p class="note">Checking…</p></div>' +
       '<h3>Authorized users</h3><div id="users"><p class="note">Loading…</p></div>' +
       '<div class="field" style="margin-top:.8rem"><label>Add user (Google email)</label>' +
@@ -185,6 +219,15 @@
     document.getElementById('cancel')!.addEventListener('click', closeSheet);
     rebindMetal();
     loadStatus(); loadUsers();
+    document.getElementById('apply-font')!.addEventListener('click', function(){
+      var fam = (document.getElementById('font-select') as HTMLSelectElement).value;
+      var chosen = FONTS.filter(function(f){ return f.family === fam; })[0];
+      if (!chosen) return;
+      state.content.settings = state.content.settings || {};
+      state.content.settings.font = chosen;
+      applyFont(chosen);                 // live preview
+      saveContent();                     // persist -> public pages pick it up
+    });
     document.getElementById('add-user')!.addEventListener('click', function(){
       var em = (document.getElementById('new-user') as HTMLInputElement).value.trim().toLowerCase();
       if (!em) return;

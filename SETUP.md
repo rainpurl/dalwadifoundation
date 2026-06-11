@@ -1,145 +1,140 @@
-# The Dalwadi Foundation — deploy & setup
+# The Dalwadi Foundation — deploy & setup (no terminal, all via the web)
 
-There are two layers here:
+Two layers:
 
-1. **The public site** — fully static (`dist/`). It deploys to Cloudflare Pages with zero
-   configuration and is ready today.
-2. **The app layer** — Google sign-in, the editable CMS, the authorized-user list, and the
-   Cloudflare/GitHub status panel. These run as **Cloudflare Pages Functions** (the `functions/`
-   folder) and need a few credentials before they work: a Google OAuth app, a Cloudflare KV
-   namespace, and (optionally) API tokens for the status panel.
+1. **The public site** — static, deploys to Cloudflare Pages with no configuration. Ready today.
+2. **The staff portal** — Google sign-in, the editable CMS, the authorized-user list, and the
+   Cloudflare/GitHub status panel. These run as Cloudflare Pages Functions and need a Google
+   OAuth app, a KV namespace, and a few secrets before they work.
 
-Do Part A to get the site live. Do Part B when you want the staff portal working.
+Everything below is done in a web browser. No command line.
 
 ---
 
-## Part A — Get the site live (GitHub + Cloudflare Pages)
+## Part A — Get the site live
 
-### 1. Put the code on GitHub
-From this project folder:
+### 1. Create the repository on github.com
+1. Sign in to **github.com** → click the **+** (top right) → **New repository**.
+2. Name it `dalwadi-foundation`. Public or Private is fine. **Do not** tick "Add a README".
+   Click **Create repository**.
 
-```bash
-git init
-git add .
-git commit -m "Dalwadi Foundation site"
-git branch -M main
-# create an empty repo on github.com first (e.g. dalwadi-foundation), then:
-git remote add origin https://github.com/<you>/dalwadi-foundation.git
-git push -u origin main
-```
+### 2. Upload the files (drag-and-drop)
+1. On your computer, **double-click the downloaded `dalwadi-foundation.zip`** to unzip it.
+2. **Open** the resulting `dalwadi-foundation` folder so you can see what's inside
+   (`package.json`, `src`, `functions`, `public`, …).
+3. Back on the new repo page, click the link **"uploading an existing file"**
+   (or **Add file → Upload files**).
+4. Select **everything inside** the folder (not the folder itself) and drag it onto the page.
+   GitHub keeps the subfolders.
+   - ⚠️ Important: `package.json` must land at the **top level** of the repo. That's why you drag
+     the folder's *contents*, not the folder — otherwise it ends up one level too deep and the
+     build will fail.
+5. Scroll down, type a message like "Initial site", click **Commit changes**.
 
-### 2. Create the Cloudflare Pages project
-1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
-2. Pick the repo you just pushed.
-3. Build settings:
+> If your browser won't accept dragging folders, install **GitHub Desktop** (a free app, no
+> commands): create the repo, copy the files into its folder, then click **Commit** and **Push**.
+
+### 3. Connect Cloudflare Pages
+1. In the **Cloudflare dashboard** → **Workers & Pages** → **Create** → **Pages** →
+   **Connect to Git**. Authorize GitHub and pick the `dalwadi-foundation` repo.
+2. Build settings:
    - **Framework preset:** Astro
    - **Build command:** `npm run build`
    - **Build output directory:** `dist`
-4. **Save and Deploy.** In ~1 minute you'll get a `*.pages.dev` URL with the live site.
+3. **Save and Deploy.** In about a minute you'll get a live address like
+   `dalwadi-foundation.pages.dev`. **Copy that URL — you'll need it in step 5.**
 
-The four pages (`/`, `/about`, `/contribute`, `/staff`) and the API routes in `functions/`
-deploy together automatically. At this point the public site works; the portal will say it
-can't sign you in until Part B is done.
+The public site now works. The portal will say it can't sign you in until Part B is done.
 
 ---
 
 ## Part B — Turn on the staff portal
 
-### 3. Create a KV namespace (stores content + the user list)
-1. Dashboard → **Workers & Pages** → **KV** → **Create a namespace**, name it `dalwadi`.
-2. Copy its **Namespace ID**.
-3. Bind it to the Pages project: **your Pages project → Settings → Functions → KV namespace
-   bindings → Add binding**:
+### 4. Create the KV namespace (stores content + the user list)
+1. **Workers & Pages → KV → Create a namespace**, name it `dalwadi`.
+2. Go to **your Pages project → Settings → Functions → KV namespace bindings → Add binding**:
    - **Variable name:** `DALWADI_KV`  ← must be exactly this
-   - **KV namespace:** the one you just made
-4. (Optional, for local dev) paste the ID into `wrangler.toml`.
+   - **KV namespace:** the `dalwadi` one you just made
+   - Save.
 
-> The owner account `pjbrahm369@gmail.com` is seeded automatically and can never be removed,
-> even before anything is written to KV.
+> The owner `pjbrahm369@gmail.com` is built in and can never be removed.
 
-### 4. Create the Google sign-in app
-1. Go to **console.cloud.google.com** → create/select a project.
-2. **APIs & Services → OAuth consent screen** → choose **External** → fill in app name + your
-   email → add yourself as a **Test user** (so only allowed people can sign in while it's in
-   "Testing"). You don't need to publish it.
+### 5. Create the Google sign-in app
+1. Go to **console.cloud.google.com** → create or pick a project.
+2. **APIs & Services → OAuth consent screen** → **External** → fill in an app name and your
+   email → under **Test users**, add the Google addresses that should be allowed to sign in
+   (at least `pjbrahm369@gmail.com`). You don't need to "publish" it.
 3. **APIs & Services → Credentials → Create credentials → OAuth client ID**:
    - **Application type:** Web application
-   - **Authorized redirect URIs:** add your callback URL(s):
-     - `https://<your-pages-subdomain>.pages.dev/api/auth/callback`
-     - and later your real domain: `https://dalwadi.org/api/auth/callback`
-4. Copy the **Client ID** and **Client secret**.
+   - **Authorized redirect URIs → Add URI:** paste your live URL + `/api/auth/callback`, e.g.
+     `https://dalwadi-foundation.pages.dev/api/auth/callback`
+   - Create, then copy the **Client ID** and **Client secret**.
 
-### 5. Add the secrets to Cloudflare Pages
-**Your Pages project → Settings → Environment variables → Production** (add the same to
-**Preview** if you want previews to work). Add:
+### 6. Add the secrets in Cloudflare
+**Your Pages project → Settings → Environment variables → Production → Add variable.** Add three:
 
 | Variable | Value |
 |---|---|
-| `GOOGLE_CLIENT_ID` | from step 4 |
-| `GOOGLE_CLIENT_SECRET` | from step 4 |
-| `SESSION_SECRET` | a long random string (e.g. `openssl rand -hex 32`) |
+| `GOOGLE_CLIENT_ID` | from step 5 |
+| `GOOGLE_CLIENT_SECRET` | from step 5 |
+| `SESSION_SECRET` | a long random string (40+ characters) — see note below |
 
-**Redeploy** (Deployments → Retry/redeploy) so the new variables take effect. Then visit
-`/about`, click **Staff**, and sign in with `pjbrahm369@gmail.com`. You should land in the portal.
+For `SESSION_SECRET`, use any password generator (your browser's built-in one, or a password
+manager) to make a long random string of letters and numbers. Keep it private; changing it later
+signs everyone out.
 
-### 6. (Optional) Light up the Dev-tools status panel
-The "Dev tools" tile shows Cloudflare + GitHub status. It works without these (shows
-"not configured"); add them to make the dots live.
+**Then redeploy so the secrets take effect:** Pages project → **Deployments** → open the latest →
+**Retry deployment** (or just commit any small change on github.com to trigger a rebuild).
 
-**Cloudflare deploy status** — add env vars:
-- `CF_API_TOKEN` — dashboard → **My Profile → API Tokens → Create Token**. Use the
-  **"Read all resources"** template, or a custom token with **Account → Cloudflare Pages → Read**.
-- `CF_ACCOUNT_ID` — shown in the dashboard URL / Workers & Pages overview.
-- `CF_PROJECT_NAME` — your Pages project name (e.g. `dalwadi-foundation`).
+### 7. Sign in
+Go to your site → **About** → **Staff** (top right) → **Sign in with Google** with
+`pjbrahm369@gmail.com`. You should land in the portal with four tiles.
 
-**GitHub status** — add env vars:
-- `GITHUB_TOKEN` — github.com → Settings → Developer settings → **Fine-grained token**, read-only
-  **Contents** access to the repo.
-- `GITHUB_REPO` — `<you>/dalwadi-foundation`.
+### 8. (Optional) Light up the Dev-tools status dots
+The "Dev tools" tile works without these (they just show "not configured"). To make them live,
+add more environment variables (step 6) and redeploy:
 
-Redeploy after adding them.
+**Cloudflare status:**
+- `CF_API_TOKEN` — dashboard → **My Profile → API Tokens → Create Token** → use the
+  **"Read all resources"** template (or a custom token with **Account → Cloudflare Pages → Read**).
+- `CF_ACCOUNT_ID` — your account ID (shown on the Workers & Pages overview / in the dashboard URL).
+- `CF_PROJECT_NAME` — `dalwadi-foundation`.
 
-### 7. Custom domain
-**Your Pages project → Custom domains → Set up a domain.**
-- Add `dalwadi.org` (and `www` if you want). Cloudflare walks you through DNS.
-- You can also add `dalwadi-org.katr.es` the same way if that's where you want it first.
-- **Important:** after the domain is live, add `https://dalwadi.org/api/auth/callback` to the
-  Google OAuth **Authorized redirect URIs** (step 4) or sign-in will fail on that domain.
+**GitHub status:**
+- `GITHUB_TOKEN` — github.com → **Settings → Developer settings → Personal access tokens →
+  Fine-grained tokens** → read-only **Contents** access to the repo.
+- `GITHUB_REPO` — `your-username/dalwadi-foundation`.
+
+### 9. Custom domain
+**Your Pages project → Custom domains → Set up a domain** → add `dalwadi.org` (and/or
+`dalwadi-org.katr.es`). Cloudflare walks you through the DNS.
+- ⚠️ After the domain is live, go back to the Google app (step 5) and **add a second redirect URI**:
+  `https://dalwadi.org/api/auth/callback` — otherwise sign-in fails on the real domain.
 
 ---
 
-## How editing works
-- Staff edits in the portal are saved to **KV** and served by `/api/content`.
-- Public pages render the built-in copy instantly, then fetch `/api/content` and swap in any
-  edits — so **text changes show up live, no rebuild needed**.
-- **Adding a brand-new pillar** updates the About page and the API immediately, but the animated
-  towers on the landing page are generated at build time. To make a *new* tower appear, edit
-  `src/data/pillars.ts` and push (a redeploy). Editing existing pillar text shows live.
+## Editing the site
+Once you're signed in to the portal:
+- **Pillars** tile — edit each pillar's copy and its partner links (this is where you fix the
+  partner URLs), or add a pillar.
+- **About** / **Contribute** tiles — edit that page's text; Contribute also has the donate link
+  and contact email.
 
-## Swapping in the real logo
-Replace the placeholder "D" in `src/components/Brand.astro` with
-`<img src="/logo.svg" class="brandmark" alt="" aria-hidden="true" />` (drop `logo.svg` into
-`public/`). Update `public/favicon.svg` too. Keep the `brandmark` class so the animation works.
+Text edits show on the public site immediately (no rebuild). **Adding a brand-new pillar** shows
+on the About page right away, but a *new animated tower* on the landing page only appears after a
+rebuild, because the towers are generated at build time. To add one, edit
+`src/data/pillars.ts` on github.com (open the file → pencil icon → edit → Commit) — that triggers
+an automatic redeploy.
 
-## Before launch — confirm these
-Search the project for `EDIT` and the placeholders:
-- Partner URLs in `src/data/pillars.ts` (House of Devi, charity: water, Hilton College, Daya, HAWC).
-- `donateUrl` and `email` in `src/data/site.ts`.
-- Keep `functions/_lib/defaults.js` in sync with `src/data/*` (it's the API's fallback copy).
+## The real logo
+On github.com: upload your `logo.svg` into the `public` folder (Add file → Upload files), then
+open `src/components/Brand.astro` (pencil icon) and replace the placeholder `D` with
+`<img src="/logo.svg" class="brandmark" alt="" aria-hidden="true" />`. Update `public/favicon.svg`
+the same way. Keep the `brandmark` class so the intro animation still works.
 
-## Local development
-```bash
-npm install
-npm run build
-npx wrangler pages dev dist          # serves the site + functions locally
-```
-For local OAuth, add the secrets to a `.dev.vars` file (same names as the env vars) and add
-`http://localhost:8788/api/auth/callback` to the Google redirect URIs.
-
-## Security notes (please read)
-- Sessions are HMAC-signed cookies (HttpOnly, Secure, SameSite=Lax). Keep `SESSION_SECRET` secret;
-  rotating it signs everyone out.
-- Only verified Google emails on the allowlist can sign in; the owner is immutable server-side.
-- This auth/CMS layer is **v1 and hasn't been exercised against live Google/Cloudflare/GitHub yet**
-  (it can't be until your credentials exist). Test the full sign-in → edit → save loop after the
-  first deploy, and treat it as something to harden, not as audited production auth.
+## Good to know
+- The auth/CMS layer is **v1 and hasn't been tested against live Google/Cloudflare yet** (it can't
+  be until your credentials exist). Test the sign-in → edit → save loop right after your first
+  deploy and treat it as something to harden, not as audited production auth.
+- `functions/_lib/defaults.js` holds the API's fallback copy of the content; if you change the
+  built-in defaults in `src/data/`, mirror them there too.

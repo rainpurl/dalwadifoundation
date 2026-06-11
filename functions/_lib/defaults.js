@@ -2,6 +2,9 @@
 export const OWNER = "pjbrahm369@gmail.com";
 
 export const DEFAULT_CONTENT = {
+  settings: {
+    font: { label: "Literata", family: "Literata", stack: '"Literata", Georgia, serif' },
+  },
   pillars: [
     { key: "art", name: "Art", eyebrow: "Community & Art", title: "The Art Pillar",
       body: "Through House of Devi, we give artists room to create — and neighbors a place to gather around their work.",
