@@ -220,7 +220,7 @@
       '<h3>Site logo</h3>' +
       '<div class="field"><label>Replace the logo (SVG) — shows on the homepage and as the favicon</label>' +
         '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">' +
-          '<img id="logo-prev" alt="" style="height:40px;width:auto;background:#0e1f4d;border-radius:8px;padding:6px" src="' + esc((state.content.settings && state.content.settings.logo) || '/logo.svg') + '">' +
+          '<img id="logo-prev" alt="" style="height:40px;width:auto;background:#0e1f4d;border-radius:8px;padding:6px" src="' + esc((state.content.settings && state.content.settings.logo) || '/logo.png') + '">' +
           '<input id="logo-file" type="file" accept="image/svg+xml,.svg">' +
           '<button type="button" class="metal metal--sm" id="logo-upload">Upload</button>' +
         '</div></div>' +

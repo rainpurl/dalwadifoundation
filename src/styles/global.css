@@ -124,7 +124,7 @@ a{ color: inherit; }
 
 .tower__btn{
   position: absolute; inset: 0; padding: 0; border: 0; background: transparent;
-  -webkit-tap-highlight-color: transparent; cursor: pointer; pointer-events: none;
+  -webkit-tap-highlight-color: transparent; cursor: pointer; pointer-events: none; z-index: 2;
 }
 .tower__rise{
   position: absolute; inset: 0; transform-style: preserve-3d;
@@ -174,9 +174,9 @@ a{ color: inherit; }
   position: absolute; left: 50%; bottom: 46%;
   width: clamp(150px, 17vw, 210px);
   transform: translateX(-50%);
-  text-align: center; z-index: 1; pointer-events: none;
+  text-align: center; z-index: 1; visibility: hidden; pointer-events: none;
 }
-.tower.is-hover .tower__panel, .tower:focus-within .tower__panel, .tower.is-open .tower__panel{ pointer-events: auto; }
+.tower.is-hover .tower__panel, .tower:focus-within .tower__panel, .tower.is-open .tower__panel{ visibility: visible; pointer-events: auto; }
 .towers.is-solo .tower.is-open .tower__panel{ width: min(330px, 86vw); }
 .tp__eyebrow{ margin: 0 0 .5em; font-weight: 600; font-size: .82rem; letter-spacing: .04em; color: var(--eyebrow); }
 .tp__title{ margin: 0 0 .35em; font-family: var(--font); font-weight: 600; font-size: clamp(1.3rem, 2.6vw, 1.6rem); line-height: 1.08; color: var(--navy); }
@@ -252,16 +252,20 @@ a{ color: inherit; }
   padding: clamp(90px,15vh,150px) clamp(20px,6vw,64px) clamp(48px,9vh,90px); }
 .topbar{
   position: fixed; top: 0; left: 0; right: 0; height: clamp(64px,9vh,86px); z-index: 30;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 0 clamp(14px,5vw,40px);
+  background: rgba(244,247,252,.72);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1); backdrop-filter: blur(12px) saturate(1.1);
+  border-bottom: 1px solid var(--line);
 }
-.topbar__brand{
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
-  font-family: var(--font); font-weight: 600; font-size: clamp(1rem,2.6vw,1.25rem);
-  letter-spacing: .01em; color: var(--ink); text-decoration: none; white-space: nowrap;
+.topbar__home{
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink);
+  font-family: var(--font); font-weight: 600; font-size: clamp(1rem,2.6vw,1.2rem); letter-spacing: .01em; white-space: nowrap;
 }
-.topbar__spacer{ width: 2.8em; height: 1px; }
-@media (max-width: 540px){ .topbar__brand{ display: none; } }
+.topbar__logo{ height: clamp(28px,5vw,38px); width: auto; display: block; }
+.topnav{ display: flex; align-items: center; gap: 10px; }
+.metal.is-current{ box-shadow: inset 0 0 0 1.5px rgba(20,34,63,.5), 0 1px 2px rgba(12,26,64,.18); }
+@media (max-width: 540px){ .topbar__home span{ display: none; } }
 
 .content{ max-width: 720px; margin: 0 auto; }
 .kicker{ margin: 0 0 .9em; font-weight: 600; font-size: .86rem; letter-spacing: .06em; color: var(--eyebrow); }

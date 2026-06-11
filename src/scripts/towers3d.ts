@@ -1,7 +1,7 @@
 // THE DALWADI FOUNDATION — rounded-glass towers in WebGL (Three.js).
-// One small scene per <canvas> (a real RoundedBox with lighting + a reflective
-// blue-glass environment). CSS still owns layout, the idle bob, and the sink;
-// this only draws the box and turns it left/right toward the cursor.
+// One small scene per <canvas>: a RoundedBox with reflective silvery-glass
+// material + a gradient environment. CSS owns layout, the idle bob, and the
+// sink; this draws the box and turns it left/right toward the cursor.
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 
@@ -13,22 +13,27 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
   var hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   // ---- tuning knobs ----
-  var TILT = 0.34;          // max left/right turn (radians, ~20°)
-  var REST_Y = -0.16;       // resting turn
-  var PITCH = 0.13;         // constant top-down view so the rounded top shows
-  var COLOR = 0x1b3c79;     // glass blue
-  var METAL = 0.5, ROUGH = 0.24;
+  var TILT = 0.32;          // max left/right turn (radians)
+  var REST_Y = -0.15;       // resting turn
+  var PITCH = 0.13;         // top-down view (keeps a flat, square-ish top visible)
+  var DEPTH_FRAC = 0.36;    // box depth as a fraction of width (smaller = more square top)
+  var RADIUS_FRAC = 0.085;  // edge fillet as a fraction of width (smaller = sharper corners)
+  var COLOR = 0x4a6390;     // steel/silver-blue glass tint
+  var METAL = 0.9, ROUGH = 0.18, ENV_I = 1.55;
 
-  // shared gradient used for reflections (blue glass: light sky -> deep navy)
+  // shared reflective environment: silvery sky with a bright reflection band,
+  // deepening to navy. Drives the "reflective frosted glass" look.
   var envCanvas = document.createElement("canvas");
-  envCanvas.width = 8; envCanvas.height = 128;
+  envCanvas.width = 8; envCanvas.height = 160;
   var ectx = envCanvas.getContext("2d")!;
-  var grad = ectx.createLinearGradient(0, 0, 0, 128);
-  grad.addColorStop(0.0, "#e3edfb");
-  grad.addColorStop(0.32, "#9bb8e6");
-  grad.addColorStop(0.6, "#395fa3");
+  var grad = ectx.createLinearGradient(0, 0, 0, 160);
+  grad.addColorStop(0.0, "#f3f7fd");
+  grad.addColorStop(0.2, "#d4e2f4");
+  grad.addColorStop(0.34, "#ffffff");   // silvery highlight streak
+  grad.addColorStop(0.44, "#acc4e6");
+  grad.addColorStop(0.66, "#3f5f97");
   grad.addColorStop(1.0, "#0a1838");
-  ectx.fillStyle = grad; ectx.fillRect(0, 0, 8, 128);
+  ectx.fillStyle = grad; ectx.fillRect(0, 0, 8, 160);
 
   var ctrls: any[] = [];
 
@@ -36,11 +41,10 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
     var tower = canvas.closest(".tower") as HTMLElement;
     if (!tower) return null;
     var renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    } catch (e) { return null; }
+    try { renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true }); }
+    catch (e) { return null; }
     renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 
     var scene = new THREE.Scene();
     var env = new THREE.CanvasTexture(envCanvas);
@@ -51,13 +55,11 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
     camera.position.set(0, 0, 1500);
     camera.lookAt(0, 0, 0);
 
-    scene.add(new THREE.HemisphereLight(0xe6f0ff, 0x0a1530, 0.75));
-    var key = new THREE.DirectionalLight(0xffffff, 1.15);
-    key.position.set(-2.2, 4, 3); scene.add(key);
-    var rim = new THREE.DirectionalLight(0xbfd4ff, 0.4);
-    rim.position.set(2, 1.5, -2); scene.add(rim);
+    scene.add(new THREE.HemisphereLight(0xeef4ff, 0x18233f, 0.55));
+    var key = new THREE.DirectionalLight(0xffffff, 0.85);
+    key.position.set(-2.4, 3.6, 3); scene.add(key);
 
-    var mat = new THREE.MeshStandardMaterial({ color: COLOR, metalness: METAL, roughness: ROUGH, envMapIntensity: 1.15 });
+    var mat = new THREE.MeshStandardMaterial({ color: COLOR, metalness: METAL, roughness: ROUGH, envMapIntensity: ENV_I });
     var mesh = new THREE.Mesh(new RoundedBoxGeometry(1, 1, 1, 1, 0.2), mat);
     mesh.rotation.x = PITCH;
     mesh.rotation.y = REST_Y;
@@ -69,12 +71,11 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
       renderer.setSize(w, h, false);
       camera.left = -w / 2; camera.right = w / 2; camera.top = h / 2; camera.bottom = -h / 2;
       camera.updateProjectionMatrix();
-      // rebuild box at the tower's pixel dimensions
       var tw = tower.clientWidth, th = tower.clientHeight;
-      var d = tw * 0.46;
-      var r = Math.min(d, tw, th) * 0.42;
+      var d = tw * DEPTH_FRAC;
+      var r = Math.min(tw * RADIUS_FRAC, d * 0.45);
       mesh.geometry.dispose();
-      mesh.geometry = new RoundedBoxGeometry(tw, th, d, 6, r);
+      mesh.geometry = new RoundedBoxGeometry(tw, th, d, 4, r);
     }
     function render() { renderer.render(scene, camera); }
     size(); render();
@@ -83,7 +84,6 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
       tower: tower,
       setRy: function (ry: number) { mesh.rotation.y = ry; render(); },
       resize: function () { size(); render(); },
-      render: render,
     };
   }
 
@@ -110,6 +110,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
     document.addEventListener("mouseleave", function () { ctrls.forEach(function (c) { c.setRy(REST_Y); }); });
   }
   var rz: any;
-  window.addEventListener("resize", function () { clearTimeout(rz); rz = setTimeout(function () { ctrls.forEach(function (c) { c.resize(); }); }, 120); });
-  window.addEventListener("load", function () { setTimeout(function () { ctrls.forEach(function (c) { c.resize(); }); }, 120); });
+  function resizeAll() { ctrls.forEach(function (c) { c.resize(); }); }
+  window.addEventListener("resize", function () { clearTimeout(rz); rz = setTimeout(resizeAll, 140); });
+  window.addEventListener("load", function () { setTimeout(resizeAll, 150); });
 })();

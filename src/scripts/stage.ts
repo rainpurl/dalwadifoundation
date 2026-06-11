@@ -13,7 +13,7 @@
   function isPhone(){ return window.matchMedia('(max-width: 560px)').matches; }
 
   // ---- intro ----
-  var HOLD = reduce ? 150 : 1800, GAP = reduce ? 60 : 700;
+  var HOLD = reduce ? 150 : 1100, GAP = reduce ? 60 : 450;
   window.addEventListener('load', function(){
     requestAnimationFrame(function(){
       setTimeout(function(){

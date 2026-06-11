@@ -1,9 +1,9 @@
 ---
 import '../styles/global.css';
-import BackButton from '../components/BackButton.astro';
 import { site } from '../data/site';
 interface Props { title?: string; description?: string; }
 const { title = site.name, description = 'The Dalwadi Foundation — art, water, education, and domestic safety.' } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '');
 ---
 <!doctype html>
 <html lang="en">
@@ -13,7 +13,7 @@ const { title = site.name, description = 'The Dalwadi Foundation — art, water,
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#0c1a40" />
-    <link rel="icon" href="/logo.svg" />
+    <link rel="icon" href="/favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Literata:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
@@ -21,9 +21,12 @@ const { title = site.name, description = 'The Dalwadi Foundation — art, water,
   <body>
     <a class="skip" href="#main">Skip to content</a>
     <header class="topbar">
-      <BackButton />
-      <a class="topbar__brand" href="/">{site.name}</a>
-      <slot name="top-right"><span class="topbar__spacer" aria-hidden="true"></span></slot>
+      <a class="topbar__home" href="/" aria-label="Home"><img class="topbar__logo" src="/logo.png" alt="" aria-hidden="true" /><span>{site.name}</span></a>
+      <nav class="topnav" aria-label="Primary">
+        <a class={'metal metal--sm' + (path === '/about' ? ' is-current' : '')} href="/about">About</a>
+        <a class={'metal metal--sm' + (path === '/contribute' ? ' is-current' : '')} href="/contribute">Support</a>
+        <slot name="top-right" />
+      </nav>
     </header>
     <main class="page" id="main">
       <div class="content"><slot /></div>
