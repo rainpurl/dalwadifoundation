@@ -198,7 +198,7 @@ a{ color: inherit; }
 /* centered logo in the bar — hidden on the homepage (the animated mark sits here) */
 .foundation__logo{ display: flex; align-items: center; justify-content: center; }
 .foundation__logo img{ height: clamp(26px, 4.6vw, 40px); width: auto; display: block; }
-.app .foundation__logo{ display: none; }
+.app .foundation__logo{ visibility: hidden; }
 .foundation .metal{ justify-self: center; }
 
 /* brand split */
@@ -217,7 +217,7 @@ a{ color: inherit; }
   transform: translate(-50%, calc(-50% + 50svh - var(--nav-mid))) scale(.62);
 }
 .wordmark{
-  margin: 0; font-family: var(--font); font-weight: 600; font-size: clamp(1.4rem, 5vw, 2.9rem); line-height: 1.04;
+  margin: 0; font-family: var(--font); font-weight: 600; font-size: clamp(1.82rem, 6.5vw, 3.77rem); line-height: 1.04;
   white-space: nowrap; color: var(--ink); letter-spacing: .01em;
   transform: translate(-50%, calc(-50% + 2rem)) scale(1);
   transition: transform 1.15s var(--ease);
@@ -263,7 +263,7 @@ a{ color: inherit; }
 /* floating corner controls (no top bar) */
 .corner-tl{ position: fixed; top: clamp(16px,3.2vw,30px); left: clamp(16px,4vw,34px); z-index: 50; }
 .corner-tr{ position: fixed; top: clamp(16px,3.2vw,30px); right: clamp(16px,4vw,34px); z-index: 50; }
-.staff-link{ opacity: .75; transition: opacity .25s var(--ease), box-shadow .3s var(--ease); }
+.staff-link{ opacity: .25; transition: opacity .25s var(--ease), box-shadow .3s var(--ease); }
 .staff-link:hover, .staff-link:focus-visible{ opacity: 1; }
 .topbar{
   position: fixed; top: 0; left: 0; right: 0; height: clamp(64px,9vh,86px); z-index: 30;
