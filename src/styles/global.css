@@ -155,7 +155,7 @@ a{ color: inherit; }
 }
 .tower__canvas{
   position: absolute; top: -7%; left: 50%; transform: translateX(-50%);
-  width: 168%; height: 114%; display: block;
+  width: 168%; height: 132%; display: block;
 }
 
 /* tower label — horizontal, title case (no caps); vertical only when very narrow */

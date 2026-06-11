@@ -18,9 +18,9 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
   var REST_Y = -0.1;        // resting turn
   var PITCH = 0.13;         // top-down view (keeps the flat square top visible)
   var DEPTH_FRAC = 1.08;    // depth ~= width -> square prism
-  var RADIUS_FRAC = 0.085;  // subtle edge fillet
-  var COLOR = 0xdfe3ea;     // light silver base (bright even before reflections)
-  var METAL = 0.55, ROUGH = 0.22, ENV_I = 1.1;
+  var RADIUS_FRAC = 0.04;   // tighter corners (heavier, less rounded)
+  var COLOR = 0xd2dae6;     // light cool silver (glass tint)
+  var METAL = 0.9, ROUGH = 0.2, ENV_I = 1.4;
   var LABEL_COLOR = "#0c1a40"; // navy label (reads on silver)
   function drawLabel(canvas: HTMLCanvasElement, text: string) {
     var W = canvas.width, H = canvas.height;
@@ -52,11 +52,11 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
     var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 5000);
     camera.position.set(0, 0, 1500); camera.lookAt(0, 0, 0);
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xc2c9d6, 0.4));
-    var key = new THREE.DirectionalLight(0xffffff, 0.5);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xc2c9d6, 0.25));
+    var key = new THREE.DirectionalLight(0xffffff, 0.45);
     key.position.set(-2.4, 3.6, 3); scene.add(key);
 
-    var mat = new THREE.MeshStandardMaterial({ color: COLOR, metalness: METAL, roughness: ROUGH, envMapIntensity: ENV_I });
+    var mat = new THREE.MeshPhysicalMaterial({ color: COLOR, metalness: METAL, roughness: ROUGH, envMapIntensity: ENV_I, clearcoat: 1.0, clearcoatRoughness: 0.15 });
     var mesh = new THREE.Mesh(new RoundedBoxGeometry(1, 1, 1, 1, 0.2), mat);
     mesh.rotation.x = PITCH; mesh.rotation.y = REST_Y; scene.add(mesh);
 
@@ -80,10 +80,16 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
       camera.updateProjectionMatrix();
       var tw = tower.clientWidth, th = tower.clientHeight;
       var d = tw * DEPTH_FRAC, r = Math.min(tw * RADIUS_FRAC, d * 0.45);
-      mesh.geometry.dispose(); mesh.geometry = new RoundedBoxGeometry(tw, th, d, 4, r);
-      var lw = tw * 0.86, lh = lw * (224 / 512);
+      // box runs well past the bottom of the screen so it never shows an end
+      // behind the navbar; its TOP is pinned to the tower top (the canvas sits
+      // ~7% above the tower for the pitched top cap).
+      var boxH = th * 1.5;
+      mesh.geometry.dispose(); mesh.geometry = new RoundedBoxGeometry(tw, boxH, d, 3, r);
+      mesh.position.y = (h / 2 - 0.07 * th) - boxH / 2;
+      // label near the top, smaller, on the front face
+      var lw = tw * 0.6, lh = lw * (224 / 512);
       label.geometry.dispose(); label.geometry = new THREE.PlaneGeometry(lw, lh);
-      label.position.set(0, 0, d / 2 + 1.5);
+      label.position.set(0, boxH / 2 - th * 0.2, d / 2 + 1.5);
       return true;
     }
     function render() { renderer.render(scene, camera); }
