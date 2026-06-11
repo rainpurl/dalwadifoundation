@@ -22,9 +22,17 @@
     }
     document.documentElement.style.setProperty('--font', f.stack);
   }
+  function applyLogo(src: any){
+    if (!src || typeof src !== 'string') return;
+    Array.prototype.forEach.call(document.querySelectorAll('.brandmark'), function(img){ img.setAttribute('src', src); });
+    var link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+    if (!link){ link = document.createElement('link'); link.setAttribute('rel', 'icon'); document.head.appendChild(link); }
+    link.setAttribute('href', src);
+  }
   fetch('/api/content').then(function(r){ return r.ok ? r.json() : null; }).then(function(data){
     if (!data) return;
     if (data.settings && data.settings.font) applyFont(data.settings.font);
+    if (data.settings && data.settings.logo) applyLogo(data.settings.logo);
     Array.prototype.forEach.call(document.querySelectorAll('[data-c]'), function(el){
       var path = el.getAttribute('data-c'); var v = get(data, path);
       if (path.split('.').pop() === 'body') setBody(el, v); else setText(el, v);

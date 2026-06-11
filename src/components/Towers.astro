@@ -3,14 +3,16 @@ import { pillars } from '../data/pillars';
 ---
 
 <!--
-  The skyline. Each column = a 3D glass tower (front/left/right/top faces) plus
-  the text panel revealed when the tower sinks (hover / focus; tap on touch).
-  data-p / data-plink let live.ts patch copy that staff edit in the portal.
+  The skyline. Each column renders a real rounded-box tower in WebGL (towers3d.ts)
+  on a <canvas>; a CSS gradient box is the fallback if WebGL is unavailable.
+  The text panel sits BEHIND the tower and is revealed purely by the opaque tower
+  sinking past it (true occlusion — no fade). data-p / data-plink let live.ts patch
+  copy that staff edit in the portal.
 -->
 <main class="city" aria-label="The four pillars">
   <div class="towers" id="towers">
     {pillars.map((p, i) => (
-      <div class="tower" data-pillar={p.key} style={`--i:${i}`}>
+      <div class="tower" data-pillar={p.key} data-i={i} style={`--i:${i}`}>
         <div class="tower__panel" id={`panel-${p.key}`} role="group" aria-labelledby={`${p.key}-title`}>
           <p class="tp__eyebrow" data-p={`${p.key}.eyebrow`}>{p.eyebrow}</p>
           <h2 class="tp__title" id={`${p.key}-title`} data-p={`${p.key}.title`}>{p.title}</h2>
@@ -30,19 +32,12 @@ import { pillars } from '../data/pillars';
           </div>
         </div>
 
-        <button
-          class="tower__btn"
-          type="button"
-          aria-expanded="false"
-          aria-controls={`panel-${p.key}`}
-          aria-label={`${p.name} pillar`}
-        >
-          <span class="tower__rise"><span class="tower__bob"><span class="tower__lift"><span class="tower__box">
-            <span class="face face--top" aria-hidden="true"></span>
-            <span class="face face--left" aria-hidden="true"></span>
-            <span class="face face--right" aria-hidden="true"></span>
-            <span class="face face--front" aria-hidden="true"><span class="tower__name" data-p={`${p.key}.name`}>{p.name}</span></span>
-          </span></span></span></span>
+        <button class="tower__btn" type="button" aria-expanded="false" aria-controls={`panel-${p.key}`} aria-label={`${p.name} pillar`}>
+          <span class="tower__rise"><span class="tower__bob"><span class="tower__lift">
+            <span class="tower__fallback" aria-hidden="true"></span>
+            <canvas class="tower__canvas" aria-hidden="true"></canvas>
+            <span class="tower__name" data-p={`${p.key}.name`}>{p.name}</span>
+          </span></span></span>
         </button>
       </div>
     ))}

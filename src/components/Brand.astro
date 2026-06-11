@@ -4,10 +4,9 @@ import { site } from '../data/site';
 
 <!--
   Two pieces that split during the intro:
-   • .brandmark settles into the center of the foundation bar
-   • .wordmark rises to the top of the page (stays dark on the light sky)
-  To use the real logo, replace the <div class="brandmark"> with an
-  <img src="/logo.svg" class="brandmark" alt="" aria-hidden="true" /> (keep the class).
+   • .brandmark (the logo) settles into the center of the foundation bar
+   • .wordmark rises to the top of the page
+  live.ts swaps the logo source if a staff member uploads a replacement.
 -->
-<div class="brandmark" id="brandmark" aria-hidden="true">D</div>
+<img class="brandmark" id="brandmark" src="/logo.svg" alt="" aria-hidden="true" />
 <h1 class="wordmark" id="wordmark">{site.name}</h1>

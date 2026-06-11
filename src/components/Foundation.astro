@@ -1,10 +1,11 @@
 ---
-// The frosted "foundation" bar (primary navigation). The brand animates into
-// the centered slot. About -> /about, Support -> /contribute (full pages now).
+// The frosted "foundation" bar (primary navigation). The brand animates into the
+// centered slot. Buttons are .metal so they shimmer + follow the cursor (metal.ts).
+// About -> /about, Support -> /contribute (Zeffy embed).
 ---
 
 <nav class="foundation" aria-label="Primary">
-  <a class="nav-link" href="/about">About</a>
+  <a class="metal metal--sm" href="/about">About</a>
   <span class="nav-slot" aria-hidden="true"></span>
-  <a class="nav-link" href="/contribute">Support</a>
+  <a class="metal metal--sm" href="/contribute">Support</a>
 </nav>

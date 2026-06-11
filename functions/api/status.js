@@ -4,9 +4,11 @@ import { requireUser } from "../_lib/auth.js";
 export async function onRequestGet(context) {
   if (!(await requireUser(context))) return json({ error: "unauthorized" }, 401);
   const env = context.env;
+  // This endpoint runs on Cloudflare Pages Functions — if it answers at all, the
+  // site is live, so Cloudflare defaults to OK. Tokens just add deploy/commit detail.
   const out = {
-    cloudflare: { state: "unknown", detail: "not configured" },
-    github: { state: "unknown", detail: "not configured" },
+    cloudflare: { state: "ok", detail: "Functions live" },
+    github: { state: "unknown", detail: "Add GITHUB_TOKEN to show repo status" },
   };
 
   if (env.CF_API_TOKEN && env.CF_ACCOUNT_ID && env.CF_PROJECT_NAME) {

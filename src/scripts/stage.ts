@@ -1,5 +1,7 @@
-// THE DALWADI FOUNDATION — landing stage: intro timeline, horizontal cursor tilt,
-// staggered idle wave (desktop), and the touch / phone pillar interactions.
+// THE DALWADI FOUNDATION — landing stage: intro timeline + pillar interactions.
+// The 3D turn now lives in towers3d.ts. Because the tower button is
+// pointer-events:none (so the revealed panel buttons stay clickable and shimmer),
+// desktop hover is detected geometrically by which column the cursor is over.
 (function(){
   "use strict";
   var app = document.getElementById('app');
@@ -21,29 +23,6 @@
     });
   });
 
-  // ---- cursor tilt (horizontal only; desktop) ----
-  var centers = [];
-  function measure(){ centers = towers.map(function(t){ var r = t.getBoundingClientRect(); return { x: r.left + r.width / 2 }; }); }
-  var MAXY = 20, raf = 0, mx = 0;
-  function applyTilt(){
-    raf = 0; var halfW = window.innerWidth / 2;
-    for (var i = 0; i < towers.length; i++){
-      var c = centers[i]; if (!c) continue;
-      var nx = (mx - c.x) / halfW; if (nx > 1) nx = 1; if (nx < -1) nx = -1;
-      towers[i].style.setProperty('--ry', (nx * MAXY).toFixed(2) + 'deg');
-      towers[i].style.setProperty('--shine', (50 + nx * 38).toFixed(1) + '%');
-    }
-  }
-  function onMove(e){ mx = e.clientX; if (!raf) raf = requestAnimationFrame(applyTilt); }
-  function resetTilt(){ towers.forEach(function(t){ t.style.setProperty('--ry', '-10deg'); t.style.setProperty('--shine', '50%'); }); }
-  if (hoverCapable && !reduce){
-    measure();
-    window.addEventListener('pointermove', onMove, { passive: true });
-    document.addEventListener('mouseleave', resetTilt);
-    window.addEventListener('resize', measure);
-    window.addEventListener('load', function(){ setTimeout(measure, 80); setTimeout(measure, 2700); });
-  }
-
   // ---- centered card (phones) ----
   var veilEl = document.getElementById('pick-veil');
   var modalEl = document.getElementById('pillar-modal');
@@ -52,7 +31,7 @@
   function hideModal(){ if (veilEl) veilEl.classList.remove('is-on'); if (modalEl){ modalEl.classList.remove('is-on'); modalEl.setAttribute('aria-hidden', 'true'); } }
   function fillModal(t){ var panel = t.querySelector('.tower__panel'); if (panel && modalContent) modalContent.innerHTML = panel.innerHTML; }
 
-  // ---- open / close ----
+  function clearHover(){ for (var i = 0; i < towers.length; i++) towers[i].classList.remove('is-hover'); }
   function closeTowers(){
     towers.forEach(function(t){ t.classList.remove('is-open'); t.style.transform = '';
       var b = t.querySelector('.tower__btn'); if (b) b.setAttribute('aria-expanded', 'false'); });
@@ -62,33 +41,52 @@
   function openTower(t){
     closeTowers(); t.classList.add('is-open');
     var b = t.querySelector('.tower__btn'); if (b) b.setAttribute('aria-expanded', 'true');
-    if (isPhone()){
-      fillModal(t); showModal();                       // lift + centered card
-    } else {
-      if (towersWrap) towersWrap.classList.add('is-solo'); // tablet: solo + sink-reveal
+    if (isPhone()){ fillModal(t); showModal(); }
+    else {
+      if (towersWrap) towersWrap.classList.add('is-solo');
       var r = t.getBoundingClientRect();
       t.style.transform = 'translateX(' + ((window.innerWidth / 2) - (r.left + r.width / 2)).toFixed(1) + 'px)';
     }
   }
 
+  // ---- desktop: hover by geometry (which column is the cursor over) ----
+  if (hoverCapable && !reduce){
+    var hraf = 0, hx = -1, hy = -1;
+    function hoverTest(){
+      hraf = 0; var hit = null;
+      for (var i = 0; i < towers.length; i++){
+        var r = towers[i].getBoundingClientRect();
+        // exclude the bottom strip so hovering the nav bar doesn't sink a tower
+        if (hx >= r.left && hx <= r.right && hy >= r.top && hy <= r.bottom - 72){ hit = towers[i]; break; }
+      }
+      for (var j = 0; j < towers.length; j++) towers[j].classList.toggle('is-hover', towers[j] === hit);
+    }
+    window.addEventListener('pointermove', function(e){ hx = e.clientX; hy = e.clientY; if (!hraf) hraf = requestAnimationFrame(hoverTest); }, { passive: true });
+    document.addEventListener('mouseleave', clearHover);
+  }
+
+  // ---- touch / phone: tap a column to lift it + show the centered card ----
+  function towerAtX(x){
+    for (var i = 0; i < towers.length; i++){ var r = towers[i].getBoundingClientRect(); if (x >= r.left - 6 && x <= r.right + 6) return towers[i]; }
+    return null;
+  }
   if (!hoverCapable){
-    towers.forEach(function(t){
-      var b = t.querySelector('.tower__btn'); if (!b) return;
-      b.addEventListener('click', function(e){ e.stopPropagation(); t.classList.contains('is-open') ? closeTowers() : openTower(t); });
+    app.addEventListener('click', function(e){
+      if (e.target.closest('.pillar-modal') || e.target.closest('.foundation') || e.target.closest('.tp__actions')) return;
+      var t = towerAtX(e.clientX), within = false;
+      if (t){ var r = t.getBoundingClientRect(); within = e.clientY >= r.top && e.clientY <= r.bottom; }
+      if (t && within){ t.classList.contains('is-open') ? closeTowers() : openTower(t); }
+      else closeTowers();
     });
   }
-  var closeBtn = document.getElementById('pillar-modal-close');
-  if (closeBtn) closeBtn.addEventListener('click', closeTowers);
 
-  // keyboard aria
+  // ---- keyboard aria (CSS :focus-within drives the sink) ----
   towers.forEach(function(t){
     var b = t.querySelector('.tower__btn'); if (!b) return;
     t.addEventListener('focusin', function(){ b.setAttribute('aria-expanded', 'true'); });
     t.addEventListener('focusout', function(){ if (!t.contains(document.activeElement)) b.setAttribute('aria-expanded', 'false'); });
   });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeTowers(); });
-  app.addEventListener('click', function(e){
-    if (e.target.closest('.tower') || e.target.closest('.foundation') || e.target.closest('.pillar-modal')) return;
-    closeTowers(); // also closes when tapping the backdrop
-  });
+  var closeBtn = document.getElementById('pillar-modal-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeTowers);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ clearHover(); closeTowers(); } });
 })();

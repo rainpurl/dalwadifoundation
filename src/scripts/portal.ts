@@ -33,6 +33,12 @@
     }
     document.documentElement.style.setProperty("--font", f.stack);
   }
+  function applyLogo(src: string){
+    Array.prototype.forEach.call(document.querySelectorAll('.brandmark'), function(img: any){ img.setAttribute('src', src); });
+    var link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+    if (!link){ link = document.createElement('link'); link.setAttribute('rel', 'icon'); document.head.appendChild(link); }
+    link.setAttribute('href', src);
+  }
 
   function esc(s: any){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" } as any)[c]; }); }
   function api(path: string, opts?: any){ return fetch(path, Object.assign({ credentials: "same-origin", headers: { "Content-Type": "application/json" } }, opts || {})); }
@@ -77,13 +83,13 @@
       '<div class="tiles">' +
         tile('pillars', 'Pillars', 'Edit copy &amp; links, or add a pillar') +
         tile('about', 'About page', 'Edit the About story') +
-        tile('contribute', 'Contribute page', 'Edit the giving page') +
+        tile('contribute', 'Contribute', 'Opens Zeffy donations in a new tab') +
         tile('dev', 'Dev tools', 'Status &amp; authorized users', true) +
       '</div>';
     rebindMetal();
     root.querySelector('[data-tile=pillars]')!.addEventListener('click', openPillars);
     root.querySelector('[data-tile=about]')!.addEventListener('click', openAbout);
-    root.querySelector('[data-tile=contribute]')!.addEventListener('click', openContribute);
+    root.querySelector('[data-tile=contribute]')!.addEventListener('click', function(){ window.open('https://www.zeffy.com', '_blank', 'noopener'); });
     root.querySelector('[data-tile=dev]')!.addEventListener('click', openDev);
   }
   function tile(key: string, t: string, d: string, dark?: boolean){
@@ -211,6 +217,13 @@
       '<h3>Site font</h3>' +
       '<div class="field"><label>Applies across the whole site</label><select id="font-select">' + fontOpts + '</select></div>' +
       '<div class="sheet__row"><button type="button" class="metal metal--sm" id="apply-font">Apply font</button></div>' +
+      '<h3>Site logo</h3>' +
+      '<div class="field"><label>Replace the logo (SVG) — shows on the homepage and as the favicon</label>' +
+        '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">' +
+          '<img id="logo-prev" alt="" style="height:40px;width:auto;background:#0e1f4d;border-radius:8px;padding:6px" src="' + esc((state.content.settings && state.content.settings.logo) || '/logo.svg') + '">' +
+          '<input id="logo-file" type="file" accept="image/svg+xml,.svg">' +
+          '<button type="button" class="metal metal--sm" id="logo-upload">Upload</button>' +
+        '</div></div>' +
       '<h3>Service status</h3><div id="status"><p class="note">Checking…</p></div>' +
       '<h3>Authorized users</h3><div id="users"><p class="note">Loading…</p></div>' +
       '<div class="field" style="margin-top:.8rem"><label>Add user (Google email)</label>' +
@@ -227,6 +240,26 @@
       state.content.settings.font = chosen;
       applyFont(chosen);                 // live preview
       saveContent();                     // persist -> public pages pick it up
+    });
+    document.getElementById('logo-upload')!.addEventListener('click', function(){
+      var inp = document.getElementById('logo-file') as HTMLInputElement;
+      var file = inp && inp.files && inp.files[0];
+      if (!file){ toast('Choose an SVG first'); return; }
+      var reader = new FileReader();
+      reader.onload = function(){
+        var txt = String(reader.result || '');
+        if (txt.indexOf('<svg') === -1){ toast('That doesn’t look like an SVG'); return; }
+        api('/api/logo', { method: 'PUT', body: JSON.stringify({ svg: txt }) }).then(function(r){
+          if (!r.ok){ toast('Upload failed'); return; }
+          var url = '/api/logo?v=' + Date.now();   // cache-bust so the new mark shows immediately
+          state.content.settings = state.content.settings || {};
+          state.content.settings.logo = url;
+          var prev = document.getElementById('logo-prev') as HTMLImageElement; if (prev) prev.src = url;
+          applyLogo(url);
+          saveContent(function(){ toast('Logo updated'); });
+        }).catch(function(){ toast('Upload failed'); });
+      };
+      reader.readAsText(file);
     });
     document.getElementById('add-user')!.addEventListener('click', function(){
       var em = (document.getElementById('new-user') as HTMLInputElement).value.trim().toLowerCase();
