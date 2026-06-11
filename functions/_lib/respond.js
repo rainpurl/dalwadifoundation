@@ -1,0 +1,4 @@
+export const json = (data, status = 200, headers = {}) =>
+  new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json", ...headers } });
+export const redirect = (location, headers = {}) =>
+  new Response(null, { status: 302, headers: { Location: location, ...headers } });
