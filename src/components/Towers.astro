@@ -3,11 +3,11 @@ import { pillars } from '../data/pillars';
 ---
 
 <!--
-  The skyline. Each column renders a real rounded-box tower in WebGL (towers3d.ts)
-  on a <canvas>; a CSS gradient box is the fallback if WebGL is unavailable.
-  The text panel sits BEHIND the tower and is revealed purely by the opaque tower
-  sinking past it (true occlusion — no fade). data-p / data-plink let live.ts patch
-  copy that staff edit in the portal.
+  The skyline. Each column is a CSS 3D prism (four faces in a preserve-3d box).
+  stage.ts turns it left/right toward the cursor (--ry) and slides a glare across
+  the front (--shine). The text panel sits BEHIND the column and is revealed purely
+  by the opaque column sinking past it (true occlusion — no fade). data-p / data-plink
+  let live.ts patch copy that staff edit in the portal.
 -->
 <main class="city" aria-label="The four pillars">
   <div class="towers" id="towers">
@@ -33,11 +33,12 @@ import { pillars } from '../data/pillars';
         </div>
 
         <button class="tower__btn" type="button" aria-expanded="false" aria-controls={`panel-${p.key}`} aria-label={`${p.name} pillar`}>
-          <span class="tower__rise"><span class="tower__bob"><span class="tower__lift">
-            <span class="tower__fallback" aria-hidden="true"></span>
-            <canvas class="tower__canvas" aria-hidden="true"></canvas>
-            <span class="tower__name" data-p={`${p.key}.name`}>{p.name}</span>
-          </span></span></span>
+          <span class="tower__rise"><span class="tower__bob"><span class="tower__lift"><span class="tower__box">
+            <span class="face face--top" aria-hidden="true"></span>
+            <span class="face face--left" aria-hidden="true"></span>
+            <span class="face face--right" aria-hidden="true"></span>
+            <span class="face face--front" aria-hidden="true"><span class="tower__name" data-p={`${p.key}.name`}>{p.name}</span></span>
+          </span></span></span></span>
         </button>
       </div>
     ))}

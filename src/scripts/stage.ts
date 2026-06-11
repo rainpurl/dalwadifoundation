@@ -1,7 +1,8 @@
 // THE DALWADI FOUNDATION — landing stage: intro timeline + pillar interactions.
-// The 3D turn now lives in towers3d.ts. Because the tower button is
-// pointer-events:none (so the revealed panel buttons stay clickable and shimmer),
-// desktop hover is detected geometrically by which column the cursor is over.
+// The cursor turn (left/right, plus the moving glare) lives in the hover pass below.
+// Because the tower button is pointer-events:none (so the revealed panel buttons stay
+// clickable and shimmer), desktop hover is detected geometrically by which column the
+// cursor is over.
 (function(){
   "use strict";
   var app = document.getElementById('app');
@@ -59,22 +60,29 @@
     }
   }
 
-  // ---- desktop: hover by geometry (which column is the cursor over) ----
+  // ---- desktop: the cursor turns each column left/right (--ry) and slides its
+  //      glare (--shine); hover (which column the cursor is over) is detected by the
+  //      same geometry pass — one listener, one rAF. ----
   if (hoverCapable && !reduce){
     var hraf = 0, hx = -1, hy = -1;
+    var TILT_MAX = 20; // degrees of left/right turn at the screen edge
+    function setTilt(t, ry, shine){ t.style.setProperty('--ry', ry); t.style.setProperty('--shine', shine); }
+    function restTilt(){ for (var k = 0; k < towers.length; k++) setTilt(towers[k], '-10deg', '50%'); }
     function hoverTest(){
       hraf = 0;
-      if (!app.classList.contains('is-revealed') || app.classList.contains('is-intro')){ clearHover(); return; }
-      var hit = null;
+      if (!app.classList.contains('is-revealed') || app.classList.contains('is-intro')){ clearHover(); restTilt(); return; }
+      var halfW = (window.innerWidth / 2) || 1, hit = null;
       for (var i = 0; i < towers.length; i++){
         var r = towers[i].getBoundingClientRect();
-        // exclude the bottom strip so hovering the nav bar doesn't sink a tower
-        if (hx >= r.left && hx <= r.right && hy >= r.top && hy <= r.bottom - 72){ hit = towers[i]; break; }
+        var nx = (hx - (r.left + r.width / 2)) / halfW; if (nx > 1) nx = 1; if (nx < -1) nx = -1;
+        setTilt(towers[i], (nx * TILT_MAX).toFixed(2) + 'deg', (50 + nx * 38).toFixed(1) + '%');
+        // exclude the bottom strip so hovering the nav bar doesn't sink a column
+        if (hx >= r.left && hx <= r.right && hy >= r.top && hy <= r.bottom - 72){ hit = towers[i]; }
       }
       for (var j = 0; j < towers.length; j++) towers[j].classList.toggle('is-hover', towers[j] === hit);
     }
     window.addEventListener('pointermove', function(e){ hx = e.clientX; hy = e.clientY; if (!hraf) hraf = requestAnimationFrame(hoverTest); }, { passive: true });
-    document.addEventListener('mouseleave', clearHover);
+    document.addEventListener('mouseleave', function(){ clearHover(); restTilt(); });
   }
 
   // ---- touch / phone: tap a column to lift it + show the centered card ----

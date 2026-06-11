@@ -145,17 +145,60 @@ a{ color: inherit; }
 }
 .tower.is-hover .tower__lift, .tower:focus-within .tower__lift, .tower.is-open .tower__lift{ transform: translateY(62%); }
 
-/* WebGL tower (towers3d.ts) draws into this canvas. The fallback box shows only
-   if WebGL is unavailable. Both are opaque so they fully hide the panel behind
-   them until the tower sinks past it. */
-.tower__fallback{
-  position: absolute; inset: 0; border-radius: clamp(12px, 2vw, 20px);
-  background: linear-gradient(180deg, rgba(210,224,245,.96) 0%, rgba(120,150,205,.85) 13%, rgba(48,88,162,.9) 31%, var(--royal) 57%, var(--navy) 100%);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 7px 14px -6px rgba(255,255,255,.32), inset 0 -16px 26px -12px rgba(0,0,0,.4);
+/* the 3D column — four faces in a preserve-3d box. The cursor turns it left/right
+   (--ry, set by stage.ts) and slides a glare across the front (--shine). It's opaque,
+   so it fully hides the panel behind it until the column sinks past it. No WebGL. */
+.tower__box{
+  position: absolute; inset: 0; transform-style: preserve-3d;
+  transform: rotateX(5deg) rotateY(var(--ry, -10deg));
+  transition: transform .3s var(--ease-out);
 }
-.tower__canvas{
-  position: absolute; top: -7%; left: 50%; transform: translateX(-50%);
-  width: 168%; height: 132%; display: block;
+.face{
+  position: absolute; top: 50%; left: 50%; overflow: hidden;
+  backface-visibility: hidden; border-radius: var(--radius);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.face--front{
+  width: var(--tw); height: var(--th);
+  margin-left: calc(var(--tw) / -2); margin-top: calc(var(--th) / -2);
+  transform: translateZ(calc(var(--td) / 2));
+  background: linear-gradient(180deg,
+    rgba(236,242,250,.92) 0%, rgba(176,198,230,.6) 12%,
+    rgba(47,86,160,.55) 30%, var(--royal) 52%, var(--navy) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 3px 10px rgba(255,255,255,.22);
+}
+.face--front::before{ /* moving glare (driven by --shine) */
+  content:""; position:absolute; inset:0;
+  background: linear-gradient(118deg, rgba(255,255,255,0) 42%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 58%);
+  background-size: 280% 100%; background-position: var(--shine, 50%) 0;
+  mix-blend-mode: screen; transition: background-position .3s var(--ease-out);
+}
+.face--front::after{ /* faint vertical striations */
+  content:""; position:absolute; inset:0;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.07) 0 1px, transparent 1px 21px);
+  opacity:.5;
+}
+.face--left{
+  width: var(--td); height: var(--th);
+  margin-left: calc(var(--td) / -2); margin-top: calc(var(--th) / -2);
+  transform: rotateY(-90deg) translateZ(calc(var(--tw) / 2));
+  background: linear-gradient(180deg, #243a73 0%, #0e1f4d 55%, #0a1838 100%);
+  box-shadow: inset 2px 0 8px rgba(0,0,0,.32);
+}
+.face--left::after{ content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(255,255,255,.16), transparent 42%); opacity:.5; }
+.face--right{
+  width: var(--td); height: var(--th);
+  margin-left: calc(var(--td) / -2); margin-top: calc(var(--th) / -2);
+  transform: rotateY(90deg) translateZ(calc(var(--tw) / 2));
+  background: linear-gradient(180deg, #16285a 0%, #0a1840 60%, #060f2c 100%);
+  box-shadow: inset -2px 0 8px rgba(0,0,0,.4);
+}
+.face--top{
+  width: var(--tw); height: var(--td);
+  margin-left: calc(var(--tw) / -2); margin-top: calc(var(--td) / -2);
+  transform: rotateX(90deg) translateZ(calc(var(--th) / 2));
+  background: linear-gradient(160deg, #eef4fb 0%, #cfdcef 45%, #9fb6da 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.3);
 }
 
 /* tower label — horizontal, title case (no caps); vertical only when very narrow */
