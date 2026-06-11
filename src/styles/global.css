@@ -34,7 +34,7 @@
 *{ box-sizing: border-box; }
 html, body{ height: 100%; }
 body{
-  margin: 0; font-family: var(--font); color: var(--ink); background: var(--sky);
+  margin: 0; font-family: var(--font); font-weight: 300; color: var(--ink); background: var(--sky);
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
 }
 button{ font: inherit; color: inherit; cursor: pointer; }
