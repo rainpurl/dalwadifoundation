@@ -130,7 +130,9 @@ a{ color: inherit; }
   position: absolute; inset: 0; transform-style: preserve-3d;
   transform: translateY(116%); transition: transform 1s var(--ease);
 }
-.app.is-revealed .tower__rise{ transform: translateY(0); transition-delay: calc(var(--i) * .12s); }
+.app.is-revealed .tower__rise{ transform: translateY(0); }
+.app.is-revealed .tower:nth-child(2) .tower__rise, .app.is-revealed .tower:nth-child(3) .tower__rise{ transition-delay: 0s; }
+.app.is-revealed .tower:nth-child(1) .tower__rise, .app.is-revealed .tower:nth-child(4) .tower__rise{ transition-delay: .22s; }
 
 .tower__bob{ position: absolute; inset: 0; transform-style: preserve-3d; }
 @keyframes bob{ 0%{ transform: translateY(0); } 50%{ transform: translateY(-8px); } 100%{ transform: translateY(0); } }
@@ -210,7 +212,7 @@ a{ color: inherit; }
 /* brand mark is the real logo image now */
 .brandmark{
   height: clamp(46px, 8.5vw, 74px); width: auto; display: block;
-  transform: translate(-50%, calc(-50% - 2.6rem)) scale(1);
+  transform: translate(-50%, calc(-50% - 3.8rem)) scale(1);
   transition: transform 1.15s var(--ease);
 }
 .app.is-settled .brandmark{
@@ -219,7 +221,7 @@ a{ color: inherit; }
 .wordmark{
   margin: 0; font-family: var(--font); font-weight: 600; font-size: clamp(1.82rem, 6.5vw, 3.77rem); line-height: 1.04;
   white-space: nowrap; color: var(--ink); letter-spacing: .01em;
-  transform: translate(-50%, calc(-50% + 2rem)) scale(1);
+  transform: translate(-50%, calc(-50% + 2.8rem)) scale(1);
   transition: transform 1.15s var(--ease);
   animation: brandIn 1s var(--ease-out) forwards .15s, settle 1.3s var(--ease-out) forwards;
 }

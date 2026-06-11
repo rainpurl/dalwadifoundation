@@ -12,10 +12,13 @@
   var hoverCapable = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   function isPhone(){ return window.matchMedia('(max-width: 560px)').matches; }
 
-  // ---- intro (only the first time this session; instant on return visits) ----
-  var seen = false;
-  try { seen = !!sessionStorage.getItem('dalwadi_splash'); sessionStorage.setItem('dalwadi_splash', '1'); } catch (e) {}
-  if (seen) {
+  // ---- intro: play on every load EXCEPT when arriving back from a sub-page.
+  // Sub-pages (about/contribute) set a session flag; a reload always wins (shows). ----
+  var fromSub = false;
+  try { fromSub = sessionStorage.getItem('dalwadi_from_sub') === '1'; sessionStorage.removeItem('dalwadi_from_sub'); } catch (e) {}
+  var navType = '';
+  try { var navEntry: any = performance.getEntriesByType('navigation')[0]; navType = navEntry ? navEntry.type : ''; } catch (e) {}
+  if (fromSub && navType !== 'reload') {
     app.classList.remove('is-intro');
     app.classList.add('no-splash', 'is-settled', 'is-revealed');
   } else {

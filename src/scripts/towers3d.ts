@@ -4,6 +4,7 @@
 // box), and a gentle cursor turn. CSS owns layout, the idle bob, and the sink.
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 (function () {
   "use strict";
@@ -18,24 +19,9 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
   var PITCH = 0.13;         // top-down view (keeps the flat square top visible)
   var DEPTH_FRAC = 1.08;    // depth ~= width -> square prism
   var RADIUS_FRAC = 0.085;  // subtle edge fillet
-  var COLOR = 0xccd2dd;     // silver base
-  var METAL = 0.75, ROUGH = 0.16, ENV_I = 1.15;
+  var COLOR = 0xdfe3ea;     // light silver base (bright even before reflections)
+  var METAL = 0.55, ROUGH = 0.22, ENV_I = 1.1;
   var LABEL_COLOR = "#0c1a40"; // navy label (reads on silver)
-
-  // bright silver environment the surface reflects (kept light end-to-end so it
-  // never reflects dark -> never reads black)
-  function makeEnvCanvas() {
-    var c = document.createElement("canvas"); c.width = 8; c.height = 160;
-    var g = c.getContext("2d")!;
-    var gr = g.createLinearGradient(0, 0, 0, 160);
-    gr.addColorStop(0.0, "#ffffff");
-    gr.addColorStop(0.35, "#e9edf4");
-    gr.addColorStop(0.5, "#ffffff");
-    gr.addColorStop(0.65, "#dadfe9");
-    gr.addColorStop(1.0, "#c2c9d6");
-    g.fillStyle = gr; g.fillRect(0, 0, 8, 160);
-    return c;
-  }
   function drawLabel(canvas: HTMLCanvasElement, text: string) {
     var W = canvas.width, H = canvas.height;
     var g = canvas.getContext("2d")!;
@@ -59,18 +45,15 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 
     var scene = new THREE.Scene();
-    // proper reflective environment (this is what makes it a mirror, not black)
+    // real studio reflections (reliable + bright) — this is what makes it silver
     var pmrem = new THREE.PMREMGenerator(renderer);
-    var src = new THREE.CanvasTexture(makeEnvCanvas());
-    src.mapping = THREE.EquirectangularReflectionMapping;
-    src.colorSpace = THREE.SRGBColorSpace;
-    scene.environment = pmrem.fromEquirectangular(src).texture;
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
     var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 5000);
     camera.position.set(0, 0, 1500); camera.lookAt(0, 0, 0);
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xaeb6c5, 0.65));
-    var key = new THREE.DirectionalLight(0xffffff, 0.6);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xc2c9d6, 0.4));
+    var key = new THREE.DirectionalLight(0xffffff, 0.5);
     key.position.set(-2.4, 3.6, 3); scene.add(key);
 
     var mat = new THREE.MeshStandardMaterial({ color: COLOR, metalness: METAL, roughness: ROUGH, envMapIntensity: ENV_I });
