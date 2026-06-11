@@ -1,0 +1,24 @@
+---
+import Page from '../layouts/Page.astro';
+import { site } from '../data/site';
+import { pillars } from '../data/pillars';
+const a = site.about;
+---
+<Page title={`About · ${site.name}`}>
+  <a slot="top-right" class="metal metal--sm" href="/staff">Staff</a>
+
+  <p class="kicker" data-c="about.kicker">{a.kicker}</p>
+  <h1 class="title" data-c="about.title">{a.title}</h1>
+  <p class="lede" data-c="about.lede">{a.lede}</p>
+  <div class="prose" data-c="about.body">{a.body.map((p) => <p>{p}</p>)}</div>
+
+  <div class="pillar-grid">
+    {pillars.map((p) => (
+      <div class="pcard">
+        <span class="k">{p.eyebrow}</span>
+        <h3>{p.title}</h3>
+        <p>{p.body}</p>
+      </div>
+    ))}
+  </div>
+</Page>

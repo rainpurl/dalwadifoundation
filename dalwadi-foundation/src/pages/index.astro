@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import Towers from '../components/Towers.astro';
+import Foundation from '../components/Foundation.astro';
+import Brand from '../components/Brand.astro';
+---
+
+<Base>
+  <a class="skip" href="#towers">Skip to the pillars</a>
+
+  <div class="app is-intro" id="app">
+    <Towers />
+    <Foundation />
+    <Brand />
+
+    <!-- phones: tapping a pillar lifts it and shows its info centered here -->
+    <div class="pick-veil" id="pick-veil"></div>
+    <aside class="pillar-modal" id="pillar-modal" role="dialog" aria-modal="true" aria-hidden="true">
+      <button class="pillar-modal__close" type="button" id="pillar-modal-close" aria-label="Close">×</button>
+      <div id="pillar-modal-content"></div>
+    </aside>
+  </div>
+
+  <script>
+    import '../scripts/stage';
+    import '../scripts/metal';
+    import '../scripts/live';
+  </script>
+</Base>

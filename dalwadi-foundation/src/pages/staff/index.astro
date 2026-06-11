@@ -1,0 +1,23 @@
+---
+import Base from '../../layouts/Base.astro';
+import BackButton from '../../components/BackButton.astro';
+import { site } from '../../data/site';
+---
+<Base title={`Staff · ${site.name}`}>
+  <header class="topbar">
+    <BackButton />
+    <a class="topbar__brand" href="/">{site.name}</a>
+    <span class="topbar__spacer" aria-hidden="true"></span>
+  </header>
+
+  <main class="portal" id="main">
+    <div class="portal__center"><div id="portal-root"></div></div>
+  </main>
+
+  <div class="sheet-veil" id="sheet-veil"></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    import '../../scripts/portal';
+  </script>
+</Base>

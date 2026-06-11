@@ -1,0 +1,50 @@
+---
+import { pillars } from '../data/pillars';
+---
+
+<!--
+  The skyline. Each column = a 3D glass tower (front/left/right/top faces) plus
+  the text panel revealed when the tower sinks (hover / focus; tap on touch).
+  data-p / data-plink let live.ts patch copy that staff edit in the portal.
+-->
+<main class="city" aria-label="The four pillars">
+  <div class="towers" id="towers">
+    {pillars.map((p, i) => (
+      <div class="tower" data-pillar={p.key} style={`--i:${i}`}>
+        <div class="tower__panel" id={`panel-${p.key}`} role="group" aria-labelledby={`${p.key}-title`}>
+          <p class="tp__eyebrow" data-p={`${p.key}.eyebrow`}>{p.eyebrow}</p>
+          <h2 class="tp__title" id={`${p.key}-title`} data-p={`${p.key}.title`}>{p.title}</h2>
+          <p class="tp__body" data-p={`${p.key}.body`}>{p.body}</p>
+          <div class="tp__actions">
+            {p.links.map((l, j) => (
+              <a
+                class={l.ghost ? 'metal metal--sm' : 'metal metal--dark metal--sm'}
+                href={l.href}
+                data-plink={`${p.key}.${j}.href`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span data-plink={`${p.key}.${j}.label`}>{l.label}</span>{!l.ghost && <span class="arr" aria-hidden="true"> →</span>}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <button
+          class="tower__btn"
+          type="button"
+          aria-expanded="false"
+          aria-controls={`panel-${p.key}`}
+          aria-label={`${p.name} pillar`}
+        >
+          <span class="tower__rise"><span class="tower__bob"><span class="tower__lift"><span class="tower__box">
+            <span class="face face--top" aria-hidden="true"></span>
+            <span class="face face--left" aria-hidden="true"></span>
+            <span class="face face--right" aria-hidden="true"></span>
+            <span class="face face--front" aria-hidden="true"><span class="tower__name" data-p={`${p.key}.name`}>{p.name}</span></span>
+          </span></span></span></span>
+        </button>
+      </div>
+    ))}
+  </div>
+</main>

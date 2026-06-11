@@ -1,0 +1,18 @@
+---
+import Page from '../layouts/Page.astro';
+import { site } from '../data/site';
+const c = site.contribute;
+---
+<Page title={`Support · ${site.name}`}>
+  <p class="kicker" data-c="contribute.kicker">{c.kicker}</p>
+  <h1 class="title" data-c="contribute.title">{c.title}</h1>
+  <p class="lede" data-c="contribute.lede">{c.lede}</p>
+  <div class="prose" data-c="contribute.body">{c.body.map((p) => <p>{p}</p>)}</div>
+
+  <div class="actions">
+    <a class="metal metal--dark" href={c.donateUrl} data-href="contribute.donateUrl" target="_blank" rel="noopener noreferrer">
+      Donate <span class="arr" aria-hidden="true">→</span>
+    </a>
+    <a class="metal" href={`mailto:${c.email}`} data-mailto="contribute.email">Get in touch</a>
+  </div>
+</Page>
