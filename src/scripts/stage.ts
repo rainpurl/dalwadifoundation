@@ -12,16 +12,23 @@
   var hoverCapable = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   function isPhone(){ return window.matchMedia('(max-width: 560px)').matches; }
 
-  // ---- intro ----
-  var HOLD = reduce ? 150 : 1100, GAP = reduce ? 60 : 450;
-  window.addEventListener('load', function(){
-    requestAnimationFrame(function(){
-      setTimeout(function(){
-        app.classList.remove('is-intro'); app.classList.add('is-settled');
-        setTimeout(function(){ app.classList.add('is-revealed'); }, GAP);
-      }, HOLD);
+  // ---- intro (only the first time this session; instant on return visits) ----
+  var seen = false;
+  try { seen = !!sessionStorage.getItem('dalwadi_splash'); sessionStorage.setItem('dalwadi_splash', '1'); } catch (e) {}
+  if (seen) {
+    app.classList.remove('is-intro');
+    app.classList.add('no-splash', 'is-settled', 'is-revealed');
+  } else {
+    var HOLD = reduce ? 150 : 1100, GAP = reduce ? 60 : 450;
+    window.addEventListener('load', function(){
+      requestAnimationFrame(function(){
+        setTimeout(function(){
+          app.classList.remove('is-intro'); app.classList.add('is-settled');
+          setTimeout(function(){ app.classList.add('is-revealed'); }, GAP);
+        }, HOLD);
+      });
     });
-  });
+  }
 
   // ---- centered card (phones) ----
   var veilEl = document.getElementById('pick-veil');

@@ -31,6 +31,11 @@ export const DEFAULT_CONTENT = {
       "Each pillar is a long-term commitment, not a one-time gift: a partnership we grow alongside the people closest to the need.",
     ],
   },
+  team: [
+    { name: "Lorem Ipsum", title: "Founder & President", photo: "", bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },
+    { name: "Dolor Sit", title: "Executive Director", photo: "", bio: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." },
+    { name: "Amet Consectetur", title: "Director of Programs", photo: "", bio: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur." },
+  ],
   contribute: {
     kicker: "Support",
     title: "Every gift moves all four.",

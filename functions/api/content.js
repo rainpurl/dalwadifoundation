@@ -15,6 +15,7 @@ export async function onRequestPut(context) {
     pillars: Array.isArray(body.pillars) ? body.pillars : [],
     about: body.about && typeof body.about === "object" ? body.about : {},
     contribute: body.contribute && typeof body.contribute === "object" ? body.contribute : {},
+    team: Array.isArray(body.team) ? body.team : [],
     settings: body.settings && typeof body.settings === "object" ? body.settings : {},
   };
   await putContent(context.env, content);

@@ -16,10 +16,10 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
   var TILT = 0.32;          // max left/right turn (radians)
   var REST_Y = -0.15;       // resting turn
   var PITCH = 0.13;         // top-down view (keeps a flat, square-ish top visible)
-  var DEPTH_FRAC = 0.36;    // box depth as a fraction of width (smaller = more square top)
+  var DEPTH_FRAC = 1.08;    // box depth ~= width -> square prism
   var RADIUS_FRAC = 0.085;  // edge fillet as a fraction of width (smaller = sharper corners)
-  var COLOR = 0x4a6390;     // steel/silver-blue glass tint
-  var METAL = 0.9, ROUGH = 0.18, ENV_I = 1.55;
+  var COLOR = 0xdfe3ea;     // bright silver (mirror tint)
+  var METAL = 1.0, ROUGH = 0.08, ENV_I = 1.5;
 
   // shared reflective environment: silvery sky with a bright reflection band,
   // deepening to navy. Drives the "reflective frosted glass" look.
@@ -27,12 +27,12 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
   envCanvas.width = 8; envCanvas.height = 160;
   var ectx = envCanvas.getContext("2d")!;
   var grad = ectx.createLinearGradient(0, 0, 0, 160);
-  grad.addColorStop(0.0, "#f3f7fd");
-  grad.addColorStop(0.2, "#d4e2f4");
-  grad.addColorStop(0.34, "#ffffff");   // silvery highlight streak
-  grad.addColorStop(0.44, "#acc4e6");
-  grad.addColorStop(0.66, "#3f5f97");
-  grad.addColorStop(1.0, "#0a1838");
+  grad.addColorStop(0.0, "#ffffff");
+  grad.addColorStop(0.18, "#e7eaf0");
+  grad.addColorStop(0.34, "#ffffff");   // bright reflection streak
+  grad.addColorStop(0.46, "#c2c7d2");
+  grad.addColorStop(0.7, "#8a91a1");
+  grad.addColorStop(1.0, "#3a4150");    // dark steel floor
   ectx.fillStyle = grad; ectx.fillRect(0, 0, 8, 160);
 
   var ctrls: any[] = [];

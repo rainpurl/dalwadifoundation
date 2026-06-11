@@ -3,9 +3,10 @@ import Page from '../layouts/Page.astro';
 import { site } from '../data/site';
 import { pillars } from '../data/pillars';
 const a = site.about;
+const team = (site as any).team || [];
 ---
 <Page title={`About · ${site.name}`}>
-  <a slot="top-right" class="metal metal--sm" href="/staff">Staff</a>
+  <a slot="corner-tr" class="metal metal--sm" href="/staff">Staff</a>
 
   <p class="kicker" data-c="about.kicker">{a.kicker}</p>
   <h1 class="title" data-c="about.title">{a.title}</h1>
@@ -19,6 +20,20 @@ const a = site.about;
         <h3>{p.title}</h3>
         <p>{p.body}</p>
       </div>
+    ))}
+  </div>
+
+  <h2 class="section-h">Our team</h2>
+  <div class="team" id="team">
+    {team.map((m: any) => (
+      <article class="member">
+        <div class="member__photo">
+          {m.photo ? <img src={m.photo} alt={m.name} /> : <span class="member__ph" aria-hidden="true"></span>}
+        </div>
+        <h3 class="member__name">{m.name}</h3>
+        <p class="member__title">{m.title}</p>
+        <p class="member__bio">{m.bio}</p>
+      </article>
     ))}
   </div>
 </Page>

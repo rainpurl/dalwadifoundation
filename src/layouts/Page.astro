@@ -1,9 +1,10 @@
 ---
 import '../styles/global.css';
+import BackButton from '../components/BackButton.astro';
+import Foundation from '../components/Foundation.astro';
 import { site } from '../data/site';
 interface Props { title?: string; description?: string; }
 const { title = site.name, description = 'The Dalwadi Foundation — art, water, education, and domestic safety.' } = Astro.props;
-const path = Astro.url.pathname.replace(/\/$/, '');
 ---
 <!doctype html>
 <html lang="en">
@@ -20,17 +21,12 @@ const path = Astro.url.pathname.replace(/\/$/, '');
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
-    <header class="topbar">
-      <a class="topbar__home" href="/" aria-label="Home"><img class="topbar__logo" src="/logo.png" alt="" aria-hidden="true" /><span>{site.name}</span></a>
-      <nav class="topnav" aria-label="Primary">
-        <a class={'metal metal--sm' + (path === '/about' ? ' is-current' : '')} href="/about">About</a>
-        <a class={'metal metal--sm' + (path === '/contribute' ? ' is-current' : '')} href="/contribute">Support</a>
-        <slot name="top-right" />
-      </nav>
-    </header>
+    <div class="corner-tl"><BackButton /></div>
+    <div class="corner-tr"><slot name="corner-tr" /></div>
     <main class="page" id="main">
       <div class="content"><slot /></div>
     </main>
+    <Foundation />
     <script>
       import '../scripts/metal';
       import '../scripts/live';

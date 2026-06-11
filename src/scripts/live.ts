@@ -24,7 +24,7 @@
   }
   function applyLogo(src: any){
     if (!src || typeof src !== 'string') return;
-    Array.prototype.forEach.call(document.querySelectorAll('.brandmark'), function(img){ img.setAttribute('src', src); });
+    Array.prototype.forEach.call(document.querySelectorAll('.brandmark, .foundation__logo img'), function(img){ img.setAttribute('src', src); });
     var link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
     if (!link){ link = document.createElement('link'); link.setAttribute('rel', 'icon'); document.head.appendChild(link); }
     link.setAttribute('href', src);
@@ -54,6 +54,23 @@
         var link = p.links[+parts[1]];
         if (parts[2] === 'href') el.setAttribute('href', link.href); else setText(el, link.label);
       });
+    }
+    if (Array.isArray(data.team)){
+      var tbox = document.getElementById('team');
+      if (tbox){
+        tbox.innerHTML = '';
+        data.team.forEach(function(m: any){
+          var art = document.createElement('article'); art.className = 'member';
+          var ph = document.createElement('div'); ph.className = 'member__photo';
+          if (m && m.photo){ var img = document.createElement('img'); img.src = m.photo; img.alt = m.name || ''; ph.appendChild(img); }
+          else { var sp = document.createElement('span'); sp.className = 'member__ph'; sp.setAttribute('aria-hidden', 'true'); ph.appendChild(sp); }
+          var nm = document.createElement('h3'); nm.className = 'member__name'; nm.textContent = (m && m.name) || '';
+          var ti = document.createElement('p'); ti.className = 'member__title'; ti.textContent = (m && m.title) || '';
+          var bi = document.createElement('p'); bi.className = 'member__bio'; bi.textContent = (m && m.bio) || '';
+          art.appendChild(ph); art.appendChild(nm); art.appendChild(ti); art.appendChild(bi);
+          tbox.appendChild(art);
+        });
+      }
     }
   }).catch(function(){ /* keep baked content */ });
 })();

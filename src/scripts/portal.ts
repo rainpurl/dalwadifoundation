@@ -171,16 +171,44 @@
       field('Title', 'a-title', a.title) +
       field('Lede', 'a-lede', a.lede, true) +
       field('Body (one paragraph per line)', 'a-body', (a.body || []).join('\n\n'), true) +
+      '<h3>Team / About us</h3><div id="team-list"></div>' +
+      '<div class="sheet__row"><button type="button" class="metal metal--sm" id="add-member">+ Add member</button></div>' +
       '<div class="sheet__row"><button type="button" class="metal metal--dark" id="save">Save</button>' +
       '<button type="button" class="metal metal--sm" id="cancel">Cancel</button></div>');
+    renderTeam(state.content.team || []);
     document.getElementById('cancel')!.addEventListener('click', closeSheet);
+    document.getElementById('add-member')!.addEventListener('click', function(){ var t = readTeam(); t.push({ name: '', title: '', photo: '', bio: '' }); renderTeam(t); });
     document.getElementById('save')!.addEventListener('click', function(){
       state.content.about = {
         kicker: a.kicker || 'About',
         title: val('a-title'), lede: val('a-lede'),
         body: val('a-body').split(/\n\s*\n/).map(function(s){ return s.trim(); }).filter(Boolean),
       };
+      state.content.team = readTeam();
       saveContent(closeSheet);
+    });
+  }
+  function renderTeam(arr: any[]){
+    var box = document.getElementById('team-list')!;
+    box.innerHTML = arr.map(function(m, i){
+      return '<div class="subblock" data-mi="' + i + '">' +
+        '<div class="field"><label>Name</label><input data-mf="name" value="' + esc(m.name) + '"></div>' +
+        '<div class="field"><label>Title</label><input data-mf="title" value="' + esc(m.title) + '"></div>' +
+        '<div class="field"><label>Photo URL (optional)</label><input data-mf="photo" value="' + esc(m.photo) + '" placeholder="https://…"></div>' +
+        '<div class="field"><label>Short bio</label><textarea data-mf="bio">' + esc(m.bio) + '</textarea></div>' +
+        '<div class="sheet__row"><button type="button" class="metal metal--sm rm-member" style="color:#cf4b4b">Remove member</button></div>' +
+      '</div>';
+    }).join('');
+    rebindMetal();
+    Array.prototype.forEach.call(box.querySelectorAll('.rm-member'), function(b: any){
+      b.addEventListener('click', function(){ var t = readTeam(); t.splice(+b.closest('.subblock').getAttribute('data-mi'), 1); renderTeam(t); });
+    });
+  }
+  function readTeam(){
+    return Array.prototype.map.call(document.querySelectorAll('#team-list .subblock'), function(b: any){
+      var m: any = {};
+      Array.prototype.forEach.call(b.querySelectorAll('[data-mf]'), function(el: any){ m[el.getAttribute('data-mf')] = el.value; });
+      return m;
     });
   }
 
