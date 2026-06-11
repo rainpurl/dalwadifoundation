@@ -14,4 +14,7 @@ export default defineConfig({
 
   // Inline the (small) stylesheet so the first paint has no extra request.
   build: { inlineStylesheets: 'auto' },
+
+  // Prefetch internal links so sliding between pages feels instant (everything loaded).
+  prefetch: { prefetchAll: true, defaultStrategy: 'viewport' },
 });

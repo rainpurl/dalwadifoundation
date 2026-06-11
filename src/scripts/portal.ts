@@ -1,4 +1,4 @@
-// THE DALWADI FOUNDATION — staff portal (client). Talks to /api/* (Cloudflare Pages Functions).
+// THE DALWADI FOUNDATION - staff portal (client). Talks to /api/* (Cloudflare Pages Functions).
 // Auth is handled server-side; this only renders state returned by the API.
 (function(){
   "use strict";
@@ -229,12 +229,12 @@
     var current = (state.content.settings && state.content.settings.font) || DEFAULT_FONT;
     openSheet('<h2>Dev tools</h2>' +
       '<h3>Site font</h3>' +
-      '<div class="field"><label>Google font name — applies across the whole site</label>' +
+      '<div class="field"><label>Google font name, applies across the whole site</label>' +
         '<input id="font-name" type="text" placeholder="e.g. IBM Plex Serif" value="' + esc(current.family || '') + '"></div>' +
       '<p class="note">Type any family from Google Fonts, spelled exactly (e.g. “IBM Plex Serif”, “Playfair Display”, “Lora”), then Apply.</p>' +
       '<div class="sheet__row"><button type="button" class="metal metal--sm" id="apply-font">Apply font</button></div>' +
       '<h3>Site logo</h3>' +
-      '<div class="field"><label>Replace the logo (SVG) — shows on the homepage and as the favicon</label>' +
+      '<div class="field"><label>Replace the logo (SVG). Shows on the homepage and as the favicon</label>' +
         '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">' +
           '<img id="logo-prev" alt="" style="height:40px;width:auto;background:#0e1f4d;border-radius:8px;padding:6px" src="' + esc((state.content.settings && state.content.settings.logo) || '/logo.png') + '">' +
           '<input id="logo-file" type="file" accept="image/svg+xml,.svg">' +

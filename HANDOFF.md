@@ -1,4 +1,4 @@
-# The Dalwadi Foundation — Project Handoff
+# The Dalwadi Foundation - Project Handoff
 
 _Last updated by Claude at the end of a working session. This document is self-contained: a new chat should be able to pick up the project from this file plus the project zip alone._
 
@@ -8,7 +8,7 @@ _Last updated by Claude at the end of a working session. This document is self-c
 
 1. **Upload the project zip** and say: _"Read HANDOFF.md, then help me continue."_
 2. The assistant's first move should be to read this file, then `npm install` + `npm run build` to confirm the project still builds before changing anything.
-3. **Current state:** the GitHub↔Cloudflare connection is fixed — the Pages project was recreated, it builds from Git, and the CSS-columns revert is live. The active items now are (a) **fix the staff sign-in** (Google OAuth is returning `Error 401: invalid_client` — see §10) and (b) **set the live site font to IBM Plex Serif** through the staff portal (see §10, "KV stores content wholesale"). See §11 for the full TODO list.
+3. **Current state:** the GitHub↔Cloudflare connection is fixed - the Pages project was recreated, it builds from Git, and the CSS-columns revert is live. The active items now are (a) **fix the staff sign-in** (Google OAuth is returning `Error 401: invalid_client` - see §10) and (b) **set the live site font to IBM Plex Serif** through the staff portal (see §10, "KV stores content wholesale"). See §11 for the full TODO list.
 
 ---
 
@@ -18,9 +18,9 @@ A cinematic one-page landing site for **The Dalwadi Foundation**, a nonprofit or
 
 **The four pillars and their partners (URLs confirmed correct):**
 
-- **Art** (Community & Art) → House of Devi — `https://www.houseofdevi.org`
-- **Water** (Water Access) → charity: water — `https://www.charitywater.org`
-- **Education** → Conrad N. Hilton College, University of Houston — `https://www.uh.edu/hilton-college/`
+- **Art** (Community & Art) → House of Devi - `https://www.houseofdevi.org`
+- **Water** (Water Access) → charity: water - `https://www.charitywater.org`
+- **Education** → Conrad N. Hilton College, University of Houston - `https://www.uh.edu/hilton-college/`
 - **Domestic Safety** → Daya (`https://www.dayahouston.org`) + Houston Area Women's Center (`https://www.hawc.org`)
 
 **Key facts**
@@ -32,71 +32,71 @@ A cinematic one-page landing site for **The Dalwadi Foundation**, a nonprofit or
 | Production URL (later) | `dalwadi.org` |
 | Owner / sign-in | `pjbrahm369@gmail.com` (built into the code as the permanent owner; can't be removed) |
 | Cloudflare KV namespace | `dalwadi` (bound to the Functions as `DALWADI_KV`) |
-| Workflow | **No terminal** — everything via github.com (web UI) + the Cloudflare dashboard |
+| Workflow | **No terminal** - everything via github.com (web UI) + the Cloudflare dashboard |
 
 ---
 
 ## 2. Tech stack & architecture
 
-- **Astro 4.16.18**, `output: 'static'` — the public site is fully static HTML/CSS/JS. Builds with `npm run build` → `dist/`.
+- **Astro 4.16.18**, `output: 'static'` - the public site is fully static HTML/CSS/JS. Builds with `npm run build` → `dist/`.
 - **Cloudflare Pages** hosts the static site. **Cloudflare Pages Functions** (the `functions/` folder) run the dynamic layer.
 - **Cloudflare KV** (`DALWADI_KV`) is the CMS store: staff edits to pillar copy, About/Contribute text, the team list, the font, the logo, and the authorized-user list all live here and override the built-in defaults at runtime.
 - **Google OAuth** gates the staff portal. Only Google accounts on the authorized list (owner is always allowed) can sign in.
 - Two layers, deployable independently:
-  1. **Public site** — static, works with zero configuration.
-  2. **Staff portal** — needs a Google OAuth app, the KV binding, and secrets (see §6) before it functions.
+  1. **Public site** - static, works with zero configuration.
+  2. **Staff portal** - needs a Google OAuth app, the KV binding, and secrets (see §6) before it functions.
 
-**How content flows:** the page ships with default copy baked in from `src/data/`. On load, `src/scripts/live.ts` fetches `/api/content` and patches staff-edited values into elements tagged `data-c` / `data-p` / `data-plink` / `data-href`, and applies the saved **font** and **logo**. So text/font edits made in the portal appear on the live site immediately — **but** a brand-new pillar *column* only appears after a rebuild, because the columns are generated at build time from `src/data/pillars.ts`. **Important:** see §10 on how KV content is served *wholesale*, which affects whether edits to baked defaults ever show.
+**How content flows:** the page ships with default copy baked in from `src/data/`. On load, `src/scripts/live.ts` fetches `/api/content` and patches staff-edited values into elements tagged `data-c` / `data-p` / `data-plink` / `data-href`, and applies the saved **font** and **logo**. So text/font edits made in the portal appear on the live site immediately - **but** a brand-new pillar *column* only appears after a rebuild, because the columns are generated at build time from `src/data/pillars.ts`. **Important:** see §10 on how KV content is served *wholesale*, which affects whether edits to baked defaults ever show.
 
 ---
 
 ## 3. File map
 
 **Config / docs**
-- `package.json`, `package-lock.json` — deps (just `astro`; Three.js was removed, see §9)
-- `astro.config.mjs` — `site: 'https://dalwadi.org'`, static output
-- `SETUP.md` — the original step-by-step deploy guide (some dashboard labels in it are outdated — trust §5)
+- `package.json`, `package-lock.json` - deps (just `astro`; Three.js was removed, see §9)
+- `astro.config.mjs` - `site: 'https://dalwadi.org'`, static output
+- `SETUP.md` - the original step-by-step deploy guide (some dashboard labels in it are outdated - trust §5)
 - `README.md`, `HANDOFF.md` (this file)
 
-**Pages — `src/pages/`**
-- `index.astro` — the landing page (columns + foundation + brand + phone modal); imports the client scripts
-- `about.astro` — About page + pillar cards + staff bio cards
-- `contribute.astro` — Support page + full-bleed donation embed
-- `staff/index.astro` — staff sign-in / portal entry
+**Pages - `src/pages/`**
+- `index.astro` - the landing page (columns + foundation + brand + phone modal); imports the client scripts
+- `about.astro` - About page + pillar cards + staff bio cards
+- `contribute.astro` - Support page + full-bleed donation embed
+- `staff/index.astro` - staff sign-in / portal entry
 
-**Layouts — `src/layouts/`**
-- `Base.astro` — landing layout (loads the IBM Plex Serif webfont, weights 300–700)
-- `Page.astro` — sub-page layout (persistent nav; same font link)
+**Layouts - `src/layouts/`**
+- `Base.astro` - landing layout (loads the IBM Plex Serif webfont, weights 300-700)
+- `Page.astro` - sub-page layout (persistent nav; same font link)
 
-**Components — `src/components/`**
-- `Towers.astro` — the four pillar columns (**CSS 3D prism**, see §9). Each panel now has title + body + links (no eyebrow).
-- `Foundation.astro` — the bottom "foundation" navbar (logo center, About left, Support right)
-- `Brand.astro` — logo mark + wordmark (splash and navbar)
-- `BackButton.astro` — sub-page back button
+**Components - `src/components/`**
+- `Towers.astro` - the four pillar columns (**CSS 3D prism**, see §9). Each panel now has title + body + links (no eyebrow).
+- `Foundation.astro` - the bottom "foundation" navbar (logo center, About left, Support right)
+- `Brand.astro` - logo mark + wordmark (splash and navbar)
+- `BackButton.astro` - sub-page back button
 
-**Client scripts — `src/scripts/`**
-- `stage.ts` — landing intro timeline + pillar open/close + **the cursor-turn/glare logic** (`--ry` / `--shine`)
-- `metal.ts` — the shimmering "metal" button cursor effect
-- `live.ts` — patches CMS content (copy, links, font, logo) from `/api/content` into the page
-- `portal.ts` — the staff portal UI (four tiles: Pillars, About, Contribute, Dev tools). The Dev-tools **font picker is now a free-text Google-Font name box** (was a dropdown).
+**Client scripts - `src/scripts/`**
+- `stage.ts` - landing intro timeline + pillar open/close + **the cursor-turn/glare logic** (`--ry` / `--shine`)
+- `metal.ts` - the shimmering "metal" button cursor effect
+- `live.ts` - patches CMS content (copy, links, font, logo) from `/api/content` into the page
+- `portal.ts` - the staff portal UI (four tiles: Pillars, About, Contribute, Dev tools). The Dev-tools **font picker is now a free-text Google-Font name box** (was a dropdown).
 
 **Styles**
-- `src/styles/global.css` — all styling (root variables, columns/faces, foundation bar, portal, mobile)
+- `src/styles/global.css` - all styling (root variables, columns/faces, foundation bar, portal, mobile)
 
-**Data (defaults) — `src/data/`**
-- `pillars.ts` — the four pillars + partner links (no `eyebrow` field)
-- `site.ts` — About copy, the team list, Contribute copy + donate link + contact email
+**Data (defaults) - `src/data/`**
+- `pillars.ts` - the four pillars + partner links (no `eyebrow` field)
+- `site.ts` - About copy, the team list, Contribute copy + donate link + contact email
 
-**Functions (server) — `functions/`**
-- `_lib/auth.js` — OAuth + session helpers (`requireUser`, etc.)
-- `_lib/kv.js` — KV read/write helpers (`getContent` returns KV content **wholesale** — see §10)
-- `_lib/defaults.js` — **fallback copy of the content** the API serves; mirror of `src/data/` + the default font + the immutable owner (keep in sync — see §10)
-- `_lib/respond.js` — JSON/redirect response helpers
-- `api/auth/login.js`, `callback.js`, `me.js`, `logout.js` — the Google sign-in flow (`/api/auth/callback` is the OAuth redirect target)
-- `api/content.js` — GET/PUT the site + pillar content (the CMS)
-- `api/users.js` — manage the authorized-user list
-- `api/logo.js` — serves an uploaded logo at `/api/logo`
-- `api/status.js` — powers the Dev-tools status dots (see §5); requires sign-in
+**Functions (server) - `functions/`**
+- `_lib/auth.js` - OAuth + session helpers (`requireUser`, etc.)
+- `_lib/kv.js` - KV read/write helpers (`getContent` returns KV content **wholesale** - see §10)
+- `_lib/defaults.js` - **fallback copy of the content** the API serves; mirror of `src/data/` + the default font + the immutable owner (keep in sync - see §10)
+- `_lib/respond.js` - JSON/redirect response helpers
+- `api/auth/login.js`, `callback.js`, `me.js`, `logout.js` - the Google sign-in flow (`/api/auth/callback` is the OAuth redirect target)
+- `api/content.js` - GET/PUT the site + pillar content (the CMS)
+- `api/users.js` - manage the authorized-user list
+- `api/logo.js` - serves an uploaded logo at `/api/logo`
+- `api/status.js` - powers the Dev-tools status dots (see §5); requires sign-in
 
 ---
 
@@ -104,9 +104,18 @@ A cinematic one-page landing site for **The Dalwadi Foundation**, a nonprofit or
 
 **Deployment is unblocked.** The Cloudflare Pages project was deleted and recreated, it's connected to Git and building again, and the **CSS-columns revert is live** (`src/scripts/towers3d.ts` was deleted on github.com; the `three` dependency is gone; build is green and homepage JS is ~4.4 kB gzipped, down from ~117 kB on the old WebGL version).
 
-**This session's changes (a fresh batch — see the note below about pushing them):**
+**This session's changes.** Two batches; both still need pushing (see the note below). Newest first.
 
-- **Pillars are fully opaque.** The column front face previously used a translucent gradient, so the copy/buttons behind it bled through while the column sank. The face gradient is now fully opaque (same silver→royal→navy look, no alpha). The text panel (copy + links) sits *behind* the column (`z-index` already correct) and is revealed purely by the opaque column sinking past it — true occlusion, no show-through.
+**Batch 2 - navigation, motion, punctuation:**
+
+- **Page-slide navigation (Astro View Transitions).** Moving between About, Home, and Support now slides the whole screen instead of a hard page reload. Spatial order is About (left) | Home (center) | Support (right): going to Support slides the screen left, going to About slides it right, and the Back/forward buttons follow the same direction. Built with Astro's `<ViewTransitions />` (added to both layouts) plus prefetch, so the target page is fetched ahead and the move feels instant. The nav bar carries `transition:name="sitenav"`, so it is held in place across the slide (this is what removes the navbar jitter). The homepage logo and the foundation-bar logo now sit coincident, so the bar logo is revealed seamlessly as the page slides away. See §9 and the testing note in §10.
+- **Reduced column rotation.** The cursor-driven left/right turn was too strong; `TILT_MAX` in `stage.ts` dropped from 20 to 14 degrees.
+- **Pillar close is twice as slow as open.** Opening (the column sinking down to reveal its card) stays brisk at .6s; closing (rising back up) is now 1.2s. In CSS the base `.tower__lift` transition (which governs the upward return) is 1.2s, and the open-state rule re-declares .6s for the downward move.
+- **No em-dashes anywhere (hard rule).** Em-dashes were removed from all copy (recast with commas/colons/periods) and from code comments and this doc (plain hyphens). Keep it that way going forward: no em-dash in content, comments, or docs.
+
+**Batch 1 - pillars + font + portal:**
+
+- **Pillars are fully opaque.** The column front face previously used a translucent gradient, so the copy/buttons behind it bled through while the column sank. The face gradient is now fully opaque (same silver→royal→navy look, no alpha). The text panel (copy + links) sits *behind* the column (`z-index` already correct) and is revealed purely by the opaque column sinking past it - true occlusion, no show-through.
 - **Font → IBM Plex Serif, Light (300).** Swapped from Literata in all four places it's wired: both layouts' `<link>`, the `--font` CSS variable, and the runtime default in `functions/_lib/defaults.js`. Body text is weight **300 (Light)**; headings/labels stay 600. `live.ts` and `portal.ts` now load the 300 weight too, so Light survives a portal font-switch.
 - **Pillar names: top-positioned + ALL CAPS.** The label on each column now sits centered in the **top half** of the visible face (≈25% line) and renders **all-caps** via CSS (data stays title-case). Reverses the old "no all-caps" rule for the labels (see §9).
 - **Corner rounding reduced slightly.** `--radius` went from `clamp(12px, 2vw, 20px)` to `clamp(8px, 1.5vw, 14px)`. That variable is used only on the pillar faces.
@@ -115,11 +124,11 @@ A cinematic one-page landing site for **The Dalwadi Foundation**, a nonprofit or
 
 **The columns:** each is a four-face **opaque** CSS prism (silver→royal→navy gradient front with a moving glare streak, darker navy side faces, a light silver top cap) that turns left/right toward the cursor. Tuning knobs live in `stage.ts` (`TILT_MAX`, and the `--ry`/`--shine` math).
 
-> ⚠️ **This zip is one batch AHEAD of the GitHub repo.** Upload these changed files on github.com and let Cloudflare rebuild. **No file deletions are needed this round** (unlike the WebGL revert). Files touched: `src/styles/global.css`, `src/layouts/Base.astro`, `src/layouts/Page.astro`, `src/scripts/live.ts`, `src/scripts/portal.ts`, `src/components/Towers.astro`, `src/pages/about.astro`, `src/data/pillars.ts`, `functions/_lib/defaults.js`.
+> ⚠️ **This zip is AHEAD of the GitHub repo** (two batches of changes). Upload these changed files on github.com and let Cloudflare rebuild. **No file deletions are needed** (unlike the WebGL revert). Files touched across both batches: `astro.config.mjs`, `src/styles/global.css`, `src/layouts/Base.astro`, `src/layouts/Page.astro`, `src/pages/index.astro`, `src/pages/about.astro`, `src/scripts/stage.ts`, `src/scripts/metal.ts`, `src/scripts/live.ts`, `src/scripts/portal.ts`, `src/components/Towers.astro`, `src/data/pillars.ts`, `src/data/site.ts`, `functions/_lib/defaults.js`, and `HANDOFF.md`.
 
 ---
 
-## 5. The deployment situation — history + recreate reference
+## 5. The deployment situation - history + recreate reference
 
 **Resolved:** the GitHub repo had been accidentally disconnected from the Cloudflare Pages project. Cloudflare Pages won't let you re-point a repo on an existing project, so the project was **deleted and recreated** (reusing the same name/`.pages.dev` URL). It is now connected to Git and deploying. The KV namespace, OAuth app, and domain registration were unaffected.
 
@@ -130,7 +139,7 @@ The recreate procedure is kept below for reference in case it's ever needed agai
 3. **Create the new project:** **Workers & Pages → Create → Pages → Connect to Git** → pick `dalwadifoundation`, name it the same as before. Build settings: **Framework Astro**, **Build command `npm run build`**, **Output directory `dist`** → **Save and Deploy**.
 4. **Re-bind KV:** project → **Settings → Bindings → Add → KV namespace** → Variable name **`DALWADI_KV`**, select the existing `dalwadi` namespace.
 5. **Re-add secrets:** project → **Settings → Variables and Secrets** → Production → add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET` (see §6). Mark secrets as encrypted.
-6. **Redeploy** — variables only take effect on a fresh deploy.
+6. **Redeploy** - variables only take effect on a fresh deploy.
 7. **Re-attach the custom domain:** project → **Custom domains → Set up a domain** → `dalwadi-org.katr.es` (and/or `dalwadi.org`).
 8. **Fix the Google OAuth redirect URI:** Google Cloud Console → **Credentials → your OAuth client → Authorized redirect URIs**. Ensure entries ending in `/api/auth/callback` exist for both `https://<pages-dev-name>.pages.dev` and `https://dalwadi-org.katr.es` (and `dalwadi.org` once live).
 
@@ -145,7 +154,7 @@ The recreate procedure is kept below for reference in case it's ever needed agai
 | Name | Type | Required? | Value |
 |---|---|---|---|
 | `DALWADI_KV` | KV binding | **Yes** (for the portal/CMS) | bind to the `dalwadi` namespace |
-| `GOOGLE_CLIENT_ID` | secret | **Yes** (for sign-in) | from the Google OAuth app — full string ending in `.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_ID` | secret | **Yes** (for sign-in) | from the Google OAuth app - full string ending in `.apps.googleusercontent.com` |
 | `GOOGLE_CLIENT_SECRET` | secret | **Yes** (for sign-in) | from the Google OAuth app |
 | `SESSION_SECRET` | secret | **Yes** (for sign-in) | a long random string; changing it signs everyone out |
 | `CF_API_TOKEN` | secret | optional (CF status dot) | token with Account → Cloudflare Pages → Read |
@@ -158,17 +167,17 @@ The recreate procedure is kept below for reference in case it's ever needed agai
 
 ## 7. Content & placeholders to finish before launch
 
-- **Partner URLs** in `src/data/pillars.ts` — ✅ confirmed correct.
-- **Team** in `src/data/site.ts` — currently three **Lorem Ipsum** placeholder members (no photos). To be filled in **later via the staff portal's About tile** (name, title, bio, headshot).
-- **Donate link** — `site.ts` `donateUrl: "#"` is still a placeholder. (Note: the portal's Contribute tile currently opens `zeffy.com`; reconcile this when finalizing the donate flow.)
-- **Contact email** — `site.ts` `email: "hello@dalwadi.org"` is still a placeholder.
-- **Logo** — the brand mark currently uses `public/logo.png` (a working/placeholder mark). The brief calls for a specific stylized capital **D**. Swap via the portal's Dev-tools logo uploader, or in code (upload to `public/`, edit `Brand.astro`, keep the `brandmark` class so the intro animation still works).
+- **Partner URLs** in `src/data/pillars.ts` - ✅ confirmed correct.
+- **Team** in `src/data/site.ts` - currently three **Lorem Ipsum** placeholder members (no photos). To be filled in **later via the staff portal's About tile** (name, title, bio, headshot).
+- **Donate link** - `site.ts` `donateUrl: "#"` is still a placeholder. (Note: the portal's Contribute tile currently opens `zeffy.com`; reconcile this when finalizing the donate flow.)
+- **Contact email** - `site.ts` `email: "hello@dalwadi.org"` is still a placeholder.
+- **Logo** - the brand mark currently uses `public/logo.png` (a working/placeholder mark). The brief calls for a specific stylized capital **D**. Swap via the portal's Dev-tools logo uploader, or in code (upload to `public/`, edit `Brand.astro`, keep the `brandmark` class so the intro animation still works).
 
 ---
 
 ## 8. Deployment workflow (no terminal)
 
-- The user works entirely through **github.com (web UI)** and the **Cloudflare dashboard** — no git CLI.
+- The user works entirely through **github.com (web UI)** and the **Cloudflare dashboard** - no git CLI.
 - **Hand back changed files as a zip** named with a couple of words describing the change, rooted at the project root (paths like `src/...`, `package.json`). The user unzips and drags the *contents* onto the repo (Add file → Upload files), which updates those files; committing triggers an automatic Cloudflare rebuild.
 - **`package.json` must stay at the repo top level.** When uploading the full project, drag the folder's *contents*, not the folder.
 - **GitHub uploads add/update but never delete.** Any file removal must be done by hand on github.com (open file → ⋯ / trash → Delete).
@@ -176,28 +185,34 @@ The recreate procedure is kept below for reference in case it's ever needed agai
 
 ---
 
-## 9. Design decisions log — don't silently undo these
+## 9. Design decisions log - don't silently undo these
 
 - **CSS columns, not WebGL.** The WebGL/Three.js columns were tried and rejected; the columns are intentionally CSS now. Don't reintroduce Three.js.
-- **Opaque pillars.** The column faces are fully opaque on purpose — the copy/links panel sits behind each column and is revealed only as the opaque column sinks past it (true occlusion; no fade, no show-through). Don't reintroduce alpha on the front face.
+- **Opaque pillars.** The column faces are fully opaque on purpose - the copy/links panel sits behind each column and is revealed only as the opaque column sinks past it (true occlusion; no fade, no show-through). Don't reintroduce alpha on the front face.
 - **Font: IBM Plex Serif, Light (300) body.** It's the single swappable site font (`--font`). The Dev-tools tile has a **free-text Google-Font name box** to change it live. Headings/labels are 600.
 - **Pillar labels are ALL CAPS** and sit in the **top half** of each column face. (This intentionally retires the earlier "no all-caps" rule, which applied to the old Literata labels.) Other copy (titles, body, About/Contribute) stays title/sentence case.
 - **No eyebrows on pillars.** The small category label was removed from the pillar panels and About cards and from the data model/portal. Don't add it back without a reason.
-- **No gold accents** — the palette is deep/royal blues + ivory + silver. Buttons use a "metal"/silver shimmer.
-- **Slightly reduced corner rounding** on the columns (`--radius` clamp(8–14px)).
+- **No gold accents** - the palette is deep/royal blues + ivory + silver. Buttons use a "metal"/silver shimmer.
+- **Slightly reduced corner rounding** on the columns (`--radius` clamp(8-14px)).
 - **Floor-line striations** are present on the column front faces (faint vertical lines). Easy to drop (one `::after` rule) if a cleaner look is wanted.
-- **Splash screen shows on first load only**, not when navigating back to the homepage from a sub-page.
+- **Splash screen shows on the first genuine page load only**, never when sliding back to the homepage in-session. Under View Transitions this is detected with a first-load flag (set on the first client navigation), which replaced the old sessionStorage approach.
 - **Persistent bottom "foundation" bar** on every page; floating Back / Staff buttons rather than a top bar.
 - **Mobile:** narrow screens shrink the columns to static (no animation); tapping one lifts it slightly and shows its info in a centered card. The pillar label stays centered (vertical) on mobile.
 - **Staff "login" button** is ~25% opacity until hovered.
+- **Page navigation slides; the nav bar holds still.** Built on Astro View Transitions. Each page keeps its own full-viewport layout (so the splash positioning is untouched), the nav bar is named `sitenav` so it stays put, and a small `astro:before-preparation` hook picks the slide direction from a fixed page order (About 0, Home 1, Support 2). `/staff` is intentionally a full reload (`data-astro-reload`) so the portal keeps initializing once per load. Because module scripts run only once under View Transitions, `stage.ts`, `metal.ts`, and `live.ts` re-init on `astro:page-load`; `stage.ts` also uses an AbortController so its window/document listeners never accumulate across navigations. Don't move init back to plain top-level module scope, or the scripts will go dead after the first slide.
+- **Gentler column rotation:** `TILT_MAX` is 14 degrees (was 20); the rest tilt stays at -10 degrees.
+- **Pillar close is slower than open** (1.2s rising up vs .6s sinking down) on purpose: brisk to reveal, graceful to hide. The base `.tower__lift` transition governs the upward/close direction.
+- **Foundation-bar logo is always visible** and sits coincident with the settled brand logo on the homepage, so a slide reveals it seamlessly. (It used to be hidden on the homepage.)
+- **No em-dashes anywhere** (hard rule): copy, comments, and docs use commas/colons/periods or plain hyphens.
 
 ---
 
 ## 10. Known issues / cautions
 
-- **KV stores the content object WHOLESALE.** `functions/_lib/kv.js` `getContent` returns the entire KV `content` key when it exists (it is *not* deep-merged with `defaults.js`). Consequence: once anything has been saved in the portal, the API serves that saved snapshot, and **changes to baked defaults (copy, pillars, font) in `src/data/` or `defaults.js` will NOT appear at runtime until they're re-saved through the portal** (or the KV `content` key is cleared). This is exactly why a stale saved font kept overriding the new IBM Plex Serif default — the old Dev-tools dropdown had written a font into KV. **To set the live font:** sign in → Dev tools → Site font → type `IBM Plex Serif` → Apply. (Baked CSS/markup changes like the opaque faces, all-caps labels, and radius are *not* in KV, so those show as soon as the build deploys.)
+- **KV stores the content object WHOLESALE.** `functions/_lib/kv.js` `getContent` returns the entire KV `content` key when it exists (it is *not* deep-merged with `defaults.js`). Consequence: once anything has been saved in the portal, the API serves that saved snapshot, and **changes to baked defaults (copy, pillars, font) in `src/data/` or `defaults.js` will NOT appear at runtime until they're re-saved through the portal** (or the KV `content` key is cleared). This is exactly why a stale saved font kept overriding the new IBM Plex Serif default - the old Dev-tools dropdown had written a font into KV. **To set the live font:** sign in → Dev tools → Site font → type `IBM Plex Serif` → Apply. (Baked CSS/markup changes like the opaque faces, all-caps labels, and radius are *not* in KV, so those show as soon as the build deploys.)
 - **Staff sign-in: `Error 401: invalid_client`** (current). This is a **client-ID** problem, not a redirect-URI one (a redirect problem shows as `Error 400: redirect_uri_mismatch`). Almost certainly the `GOOGLE_CLIENT_ID` re-entered into the recreated Pages project doesn't match a real OAuth client. Fix: (1) in Google Cloud Console → Credentials, copy the OAuth client's **Client ID** exactly (full `…apps.googleusercontent.com`, no whitespace); (2) in the Pages project → Settings → Variables and Secrets → Production, make `GOOGLE_CLIENT_ID` match, and confirm `GOOGLE_CLIENT_SECRET` + `SESSION_SECRET` are present; (3) **redeploy** (vars only apply on a fresh deploy). Then confirm the redirect URIs include `/api/auth/callback` for the `.pages.dev` and `dalwadi-org.katr.es` hosts.
-- **Auth/CMS is v1 and has not been tested against live Google/Cloudflare.** Treat the sign-in → edit → save loop as something to test and harden once sign-in works.
+- **Auth/CMS is v1 and has not been tested against live Google/Cloudflare.** Treat the sign-in then edit then save loop as something to test and harden once sign-in works.
+- **View Transitions navigation needs a real-browser check.** The slide, the held-in-place nav bar, prefetch, and the re-init-on-`astro:page-load` script wiring all build cleanly but were not run in a live browser here. After deploying, verify on the deployed site: (1) the splash plays on a fresh load of `/` but NOT when sliding back to Home from About/Support; (2) sliding to Support shows the donation embed (the Zeffy iframe reloads each time you enter Support, since it is an external embed, so expect a short load there - this is the one spot that is not "already loaded"); (3) the towers still respond to hover/click after sliding away from Home and back; (4) the metal-button shimmer and any staff-edited copy still apply on About/Support reached via a slide; (5) `/staff` still loads and signs in (it is a full reload by design). If a script seems dead after a slide, the cause is almost always init that needs to be on `astro:page-load` rather than top-level module scope (see §9).
 - **`functions/_lib/defaults.js` mirrors `src/data/`.** If you change built-in defaults in `src/data/pillars.ts` or `src/data/site.ts`, update `defaults.js` to match (and remember the wholesale-KV caveat above).
 - **New pillars:** editing existing pillar text shows live immediately, and a new pillar shows on the About page right away, but a new animated *column* on the landing page only appears after a rebuild (columns are generated at build time).
 - **Cloudflare dashboard labels drift.** SETUP.md uses older labels; the current dashboard uses **Settings → Bindings** and **Settings → Variables and Secrets**. Trust §5 over SETUP.md where they disagree.
@@ -206,12 +221,12 @@ The recreate procedure is kept below for reference in case it's ever needed agai
 
 ## 11. Outstanding TODOs (roughly prioritized)
 
-1. ✅ **Recreate the Cloudflare Pages project** so it builds from Git again — done.
-2. ✅ **Push the CSS-columns revert** and delete `towers3d.ts` — done; CSS columns are live.
-3. **Push this session's batch** (opaque pillars, IBM Plex Serif Light, all-caps top-positioned labels, smaller radius, eyebrow removal, font textbox) and redeploy. No deletions needed (§4).
-4. **Fix the staff sign-in** — resolve `Error 401: invalid_client` (verify `GOOGLE_CLIENT_ID` + redeploy; §10).
+1. ✅ **Recreate the Cloudflare Pages project** so it builds from Git again - done.
+2. ✅ **Push the CSS-columns revert** and delete `towers3d.ts` - done; CSS columns are live.
+3. **Push this session's two batches** (Batch 1: opaque pillars, IBM Plex Serif Light, all-caps top-positioned labels, smaller radius, eyebrow removal, font textbox. Batch 2: page-slide navigation, gentler rotation, slower pillar close, em-dash removal) and redeploy. No deletions needed (§4). Then run the View Transitions checks in §10.
+4. **Fix the staff sign-in** - resolve `Error 401: invalid_client` (verify `GOOGLE_CLIENT_ID` + redeploy; §10).
 5. **Set the live site font to IBM Plex Serif** via Dev tools → Site font box, because KV may still hold an older font (§10).
-6. **(Optional) Set up the Dev-tools status dots** (§5) — needs sign-in working first.
+6. **(Optional) Set up the Dev-tools status dots** (§5) - needs sign-in working first.
 7. **Finish content** (§7): team bios/photos (via portal), donate link, contact email, real logo. (Partner URLs done.)
 8. **Test and harden the auth/CMS loop** (§10) once sign-in works.
 9. **Custom domain → production:** move from `dalwadi-org.katr.es` to `dalwadi.org` when ready, and add the production OAuth redirect URI.
@@ -220,4 +235,4 @@ The recreate procedure is kept below for reference in case it's ever needed agai
 
 ## 12. Suggested message to start the next chat
 
-> I'm continuing work on The Dalwadi Foundation site. I've uploaded the full project zip and HANDOFF.md. Please read HANDOFF.md first, then confirm the build is green. Current status: [paste what you've done — e.g. "I pushed the latest batch and fixed the OAuth client ID; sign-in works now" or "still seeing Error 401 invalid_client on sign-in"]. Next I want to [your goal].
+> I'm continuing work on The Dalwadi Foundation site. I've uploaded the full project zip and HANDOFF.md. Please read HANDOFF.md first, then confirm the build is green. Current status: [paste what you've done - e.g. "I pushed the latest batch and fixed the OAuth client ID; sign-in works now" or "still seeing Error 401 invalid_client on sign-in"]. Next I want to [your goal].

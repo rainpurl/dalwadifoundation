@@ -6,7 +6,7 @@ const a = site.about;
 const team = (site as any).team || [];
 ---
 <Page title={`About · ${site.name}`}>
-  <a slot="corner-tr" class="metal metal--sm staff-link" href="/staff">Staff login</a>
+  <a slot="corner-tr" class="metal metal--sm staff-link" href="/staff" data-astro-reload>Staff login</a>
 
   <p class="kicker" data-c="about.kicker">{a.kicker}</p>
   <h1 class="title" data-c="about.title">{a.title}</h1>

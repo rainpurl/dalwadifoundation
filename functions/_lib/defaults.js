@@ -7,7 +7,7 @@ export const DEFAULT_CONTENT = {
   },
   pillars: [
     { key: "art", name: "Art", title: "The Art Pillar",
-      body: "Through House of Devi, we give artists room to create — and neighbors a place to gather around their work.",
+      body: "Through House of Devi, we give artists room to create, and neighbors a place to gather around their work.",
       links: [{ label: "Visit House of Devi", href: "https://www.houseofdevi.org" }] },
     { key: "water", name: "Water", title: "The Water Pillar",
       body: "We partner with charity: water to fund safe, lasting water access for communities that have gone without.",
@@ -25,7 +25,7 @@ export const DEFAULT_CONTENT = {
   about: {
     kicker: "About",
     title: "A foundation, and four pillars.",
-    lede: "The Dalwadi Foundation supports the people and places that make a community whole — through art, water, education, and safety.",
+    lede: "The Dalwadi Foundation supports the people and places that make a community whole, through art, water, education, and safety.",
     body: [
       "We don’t work alone. We back organizations already doing the work on the ground, and we help them do more of it.",
       "Each pillar is a long-term commitment, not a one-time gift: a partnership we grow alongside the people closest to the need.",

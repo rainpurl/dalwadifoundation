@@ -1,10 +1,11 @@
 ---
 import '../styles/global.css';
+import { ViewTransitions } from 'astro:transitions';
 import BackButton from '../components/BackButton.astro';
 import Foundation from '../components/Foundation.astro';
 import { site } from '../data/site';
 interface Props { title?: string; description?: string; }
-const { title = site.name, description = 'The Dalwadi Foundation — art, water, education, and domestic safety.' } = Astro.props;
+const { title = site.name, description = 'The Dalwadi Foundation: art, water, education, and domestic safety.' } = Astro.props;
 ---
 <!doctype html>
 <html lang="en">
@@ -18,16 +19,28 @@ const { title = site.name, description = 'The Dalwadi Foundation — art, water,
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+    <ViewTransitions />
+    <script is:inline>
+      (function(){
+        if (window.__dalwadiNav) return; window.__dalwadiNav = true;
+        var order = { '/': 1, '/about': 0, '/contribute': 2 };
+        function path(u){ try { return (u && u.pathname) ? u.pathname : new URL(u, location.href).pathname; } catch(e){ return '/'; } }
+        function idx(u){ var p = path(u).replace(/\/+$/, ''); if (!p) p = '/'; return (p in order) ? order[p] : 1; }
+        document.addEventListener('astro:before-preparation', function(e){
+          window.__dalwadiClientNav = true;
+          document.documentElement.classList.toggle('nav-back', idx(e.to) < idx(e.from));
+        });
+      })();
+    </script>
   </head>
   <body>
-    <script is:inline>try{sessionStorage.setItem('dalwadi_from_sub','1')}catch(e){}</script>
     <a class="skip" href="#main">Skip to content</a>
     <div class="corner-tl"><BackButton /></div>
     <div class="corner-tr"><slot name="corner-tr" /></div>
     <main class="page" id="main">
       <div class="content"><slot /></div>
     </main>
-    <Foundation />
+    <Foundation transition:name="sitenav" />
     <script>
       import '../scripts/metal';
       import '../scripts/live';

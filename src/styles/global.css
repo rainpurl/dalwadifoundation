@@ -1,5 +1,5 @@
 /* =========================================================
-   THE DALWADI FOUNDATION — global styles
+   THE DALWADI FOUNDATION - global styles
    ========================================================= */
 
 :root{
@@ -103,7 +103,7 @@ a{ color: inherit; }
 .metal:hover .arr{ transform: translateX(3px); }
 
 /* =========================================================
-   LANDING — skyline
+   LANDING - skyline
    ========================================================= */
 .app{ position: fixed; inset: 0; height: 100svh; overflow: hidden; background: var(--sky); }
 .city{ position: absolute; inset: 0; z-index: 10; }
@@ -141,11 +141,15 @@ a{ color: inherit; }
 
 .tower__lift{
   position: absolute; inset: 0; transform-style: preserve-3d;
-  transition: transform .6s var(--ease);
+  /* base transition governs the column rising back UP (closing): twice as slow */
+  transition: transform 1.2s var(--ease);
 }
-.tower.is-hover .tower__lift, .tower:focus-within .tower__lift, .tower.is-open .tower__lift{ transform: translateY(62%); }
+/* opening (sinking DOWN) is brisk; the open-state transition wins on the way down */
+.tower.is-hover .tower__lift, .tower:focus-within .tower__lift, .tower.is-open .tower__lift{
+  transform: translateY(62%); transition: transform .6s var(--ease);
+}
 
-/* the 3D column — four faces in a preserve-3d box. The cursor turns it left/right
+/* the 3D column - four faces in a preserve-3d box. The cursor turns it left/right
    (--ry, set by stage.ts) and slides a glare across the front (--shine). It's opaque,
    so it fully hides the panel behind it until the column sinks past it. No WebGL. */
 .tower__box{
@@ -201,7 +205,7 @@ a{ color: inherit; }
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.3);
 }
 
-/* tower label — all caps, centered in the top half of the visible column face;
+/* tower label - all caps, centered in the top half of the visible column face;
    vertical only when very narrow (mobile keeps it centered) */
 .tower__name{
   position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); z-index: 2;
@@ -213,7 +217,7 @@ a{ color: inherit; }
   .tower__name{ top: 50%; transform: translate(-50%, -50%) rotate(-90deg); letter-spacing: .12em; font-size: .92rem; }
 }
 
-/* text behind the tower — ALWAYS rendered, never faded. The opaque tower hides
+/* text behind the tower - ALWAYS rendered, never faded. The opaque tower hides
    it and reveals it only by sinking past it (true occlusion). Pointer-events are
    gated so the covered links can't be clicked while the tower is in front. */
 .tower__panel{
@@ -240,10 +244,10 @@ a{ color: inherit; }
 }
 /* hidden only while the homepage splash is running */
 .app.is-intro .foundation{ opacity: 0; transform: translateY(100%); }
-/* centered logo in the bar — hidden on the homepage (the animated mark sits here) */
+/* centered logo in the bar. On the homepage it sits coincident with the settled brand
+   mark, so when the page slides away the foundation logo is revealed seamlessly. */
 .foundation__logo{ display: flex; align-items: center; justify-content: center; }
 .foundation__logo img{ height: clamp(26px, 4.6vw, 40px); width: auto; display: block; }
-.app .foundation__logo{ visibility: hidden; }
 .foundation .metal{ justify-self: center; }
 
 /* brand split */
@@ -424,7 +428,7 @@ a{ color: inherit; }
 .toast.is-on{ opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* =========================================================
-   PHONES — small static pillars; tap lifts one + shows a centered card
+   PHONES - small static pillars; tap lifts one + shows a centered card
    ========================================================= */
 @media (max-width: 560px){
   :root{ --tw: clamp(44px, 15vw, 68px); --th: clamp(150px, 32svh, 270px); --td: clamp(13px, 3.6vw, 20px); }
@@ -445,3 +449,25 @@ a{ color: inherit; }
   .brandmark, .wordmark, .foundation, .tower, .tower__rise, .tower__bob, .tower__lift, .tower__box, .tower__panel, .metal, .pillar-modal, .pick-veil{ transition-duration: .12s !important; }
   .wordmark{ letter-spacing: .01em !important; }
 }
+
+/* =========================================================
+   PAGE SLIDE between About | Home | Support (View Transitions)
+   Forward (toward Support, on the right) slides the screen left;
+   going back (toward About, on the left) slides it right. The nav
+   bar carries view-transition-name "sitenav", so it stays put.
+   ========================================================= */
+@media (prefers-reduced-motion: no-preference){
+  ::view-transition-old(root),
+  ::view-transition-new(root){
+    animation-duration: .55s; animation-timing-function: cubic-bezier(.65,0,.2,1);
+    animation-fill-mode: both;
+  }
+  ::view-transition-old(root){ animation-name: slide-out-left; }
+  ::view-transition-new(root){ animation-name: slide-in-right; }
+  html.nav-back::view-transition-old(root){ animation-name: slide-out-right; }
+  html.nav-back::view-transition-new(root){ animation-name: slide-in-left; }
+}
+@keyframes slide-out-left  { from { transform: translateX(0); }      to { transform: translateX(-100%); } }
+@keyframes slide-in-right  { from { transform: translateX(100%); }   to { transform: translateX(0); } }
+@keyframes slide-out-right { from { transform: translateX(0); }      to { transform: translateX(100%); } }
+@keyframes slide-in-left   { from { transform: translateX(-100%); }  to { transform: translateX(0); } }

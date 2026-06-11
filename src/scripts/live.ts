@@ -29,6 +29,7 @@
     if (!link){ link = document.createElement('link'); link.setAttribute('rel', 'icon'); document.head.appendChild(link); }
     link.setAttribute('href', src);
   }
+  function run(){
   fetch('/api/content').then(function(r){ return r.ok ? r.json() : null; }).then(function(data){
     if (!data) return;
     if (data.settings && data.settings.font) applyFont(data.settings.font);
@@ -73,4 +74,7 @@
       }
     }
   }).catch(function(){ /* keep baked content */ });
+  }
+  // View Transitions: modules run once, so patch on every page load (initial + nav).
+  document.addEventListener('astro:page-load', run);
 })();

@@ -1,8 +1,12 @@
-// Move each metallic button's highlight toward the cursor — slightly (damped toward center).
+// Move each metallic button's highlight toward the cursor, slightly (damped toward center).
+// Re-binds on every 'astro:page-load' so buttons added by a view-transition navigation
+// still light up; a per-node flag prevents binding the same element twice.
 (function(){
   "use strict";
   function bind(el: Element){
     var node = el as HTMLElement;
+    if (node.getAttribute('data-metal') === '1') return;
+    node.setAttribute('data-metal', '1');
     node.addEventListener('pointermove', function(e){
       var r = node.getBoundingClientRect();
       var x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
@@ -13,5 +17,6 @@
       node.style.setProperty('--mx', '50%'); node.style.setProperty('--my', '28%');
     });
   }
-  Array.prototype.forEach.call(document.querySelectorAll('.metal'), bind);
+  function bindAll(){ Array.prototype.forEach.call(document.querySelectorAll('.metal'), bind); }
+  document.addEventListener('astro:page-load', bindAll);
 })();

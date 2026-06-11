@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { ViewTransitions } from 'astro:transitions';
 
 interface Props {
   title?: string;
@@ -8,7 +9,7 @@ interface Props {
 
 const {
   title = 'The Dalwadi Foundation',
-  description = 'The Dalwadi Foundation supports community and art, water access, education, and domestic safety — backing the organizations doing the work on the ground.',
+  description = 'The Dalwadi Foundation supports community and art, water access, education, and domestic safety, backing the organizations doing the work on the ground.',
 } = Astro.props;
 ---
 
@@ -28,6 +29,20 @@ const {
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap"
       rel="stylesheet"
     />
+
+    <ViewTransitions />
+    <script is:inline>
+      (function(){
+        if (window.__dalwadiNav) return; window.__dalwadiNav = true;
+        var order = { '/': 1, '/about': 0, '/contribute': 2 };
+        function path(u){ try { return (u && u.pathname) ? u.pathname : new URL(u, location.href).pathname; } catch(e){ return '/'; } }
+        function idx(u){ var p = path(u).replace(/\/+$/, ''); if (!p) p = '/'; return (p in order) ? order[p] : 1; }
+        document.addEventListener('astro:before-preparation', function(e){
+          window.__dalwadiClientNav = true;                       // we are navigating in-site (no splash on home)
+          document.documentElement.classList.toggle('nav-back', idx(e.to) < idx(e.from));
+        });
+      })();
+    </script>
   </head>
   <body>
     <slot />

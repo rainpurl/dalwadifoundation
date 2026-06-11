@@ -6,7 +6,7 @@ export interface Pillar {
 }
 export const pillars: Pillar[] = [
   { key: "art", name: "Art", title: "The Art Pillar",
-    body: "Through House of Devi, we give artists room to create — and neighbors a place to gather around their work.",
+    body: "Through House of Devi, we give artists room to create, and neighbors a place to gather around their work.",
     links: [{ label: "Visit House of Devi", href: "https://www.houseofdevi.org" }] },
   { key: "water", name: "Water", title: "The Water Pillar",
     body: "We partner with charity: water to fund safe, lasting water access for communities that have gone without.",
