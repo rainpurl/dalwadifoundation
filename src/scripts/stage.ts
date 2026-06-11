@@ -60,7 +60,9 @@
   if (hoverCapable && !reduce){
     var hraf = 0, hx = -1, hy = -1;
     function hoverTest(){
-      hraf = 0; var hit = null;
+      hraf = 0;
+      if (!app.classList.contains('is-revealed') || app.classList.contains('is-intro')){ clearHover(); return; }
+      var hit = null;
       for (var i = 0; i < towers.length; i++){
         var r = towers[i].getBoundingClientRect();
         // exclude the bottom strip so hovering the nav bar doesn't sink a tower
@@ -79,6 +81,7 @@
   }
   if (!hoverCapable){
     app.addEventListener('click', function(e){
+      if (!app.classList.contains('is-revealed')) return;
       if (e.target.closest('.pillar-modal') || e.target.closest('.foundation') || e.target.closest('.tp__actions')) return;
       var t = towerAtX(e.clientX), within = false;
       if (t){ var r = t.getBoundingClientRect(); within = e.clientY >= r.top && e.clientY <= r.bottom; }

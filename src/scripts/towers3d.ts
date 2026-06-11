@@ -1,7 +1,7 @@
-// THE DALWADI FOUNDATION — rounded-glass towers in WebGL (Three.js).
-// One small scene per <canvas>: a RoundedBox with reflective silvery-glass
-// material + a gradient environment. CSS owns layout, the idle bob, and the
-// sink; this draws the box and turns it left/right toward the cursor.
+// THE DALWADI FOUNDATION — silver mirrored towers in WebGL (Three.js).
+// One small scene per <canvas>: a RoundedBox with a real reflective (PMREM)
+// silver environment, a label baked onto its front face (so it turns with the
+// box), and a gentle cursor turn. CSS owns layout, the idle bob, and the sink.
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 
@@ -13,95 +13,125 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
   var hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   // ---- tuning knobs ----
-  var TILT = 0.32;          // max left/right turn (radians)
-  var REST_Y = -0.15;       // resting turn
-  var PITCH = 0.13;         // top-down view (keeps a flat, square-ish top visible)
-  var DEPTH_FRAC = 1.08;    // box depth ~= width -> square prism
-  var RADIUS_FRAC = 0.085;  // edge fillet as a fraction of width (smaller = sharper corners)
-  var COLOR = 0xdfe3ea;     // bright silver (mirror tint)
-  var METAL = 1.0, ROUGH = 0.08, ENV_I = 1.5;
+  var TILT = 0.18;          // max left/right turn toward cursor (was 0.32 — reduced)
+  var REST_Y = -0.1;        // resting turn
+  var PITCH = 0.13;         // top-down view (keeps the flat square top visible)
+  var DEPTH_FRAC = 1.08;    // depth ~= width -> square prism
+  var RADIUS_FRAC = 0.085;  // subtle edge fillet
+  var COLOR = 0xe2e5ec;     // light silver base (keeps it silver, never black)
+  var METAL = 0.92, ROUGH = 0.14, ENV_I = 1.25;
+  var LABEL_COLOR = "#0c1a40"; // navy label (reads on silver)
 
-  // shared reflective environment: silvery sky with a bright reflection band,
-  // deepening to navy. Drives the "reflective frosted glass" look.
-  var envCanvas = document.createElement("canvas");
-  envCanvas.width = 8; envCanvas.height = 160;
-  var ectx = envCanvas.getContext("2d")!;
-  var grad = ectx.createLinearGradient(0, 0, 0, 160);
-  grad.addColorStop(0.0, "#ffffff");
-  grad.addColorStop(0.18, "#e7eaf0");
-  grad.addColorStop(0.34, "#ffffff");   // bright reflection streak
-  grad.addColorStop(0.46, "#c2c7d2");
-  grad.addColorStop(0.7, "#8a91a1");
-  grad.addColorStop(1.0, "#3a4150");    // dark steel floor
-  ectx.fillStyle = grad; ectx.fillRect(0, 0, 8, 160);
+  // bright silver environment the mirror reflects (white -> light steel)
+  function makeEnvCanvas() {
+    var c = document.createElement("canvas"); c.width = 8; c.height = 160;
+    var g = c.getContext("2d")!;
+    var gr = g.createLinearGradient(0, 0, 0, 160);
+    gr.addColorStop(0.0, "#ffffff");
+    gr.addColorStop(0.4, "#eef1f6");
+    gr.addColorStop(0.5, "#ffffff");
+    gr.addColorStop(0.62, "#d2d7e1");
+    gr.addColorStop(0.85, "#aab2c1");
+    gr.addColorStop(1.0, "#737b8b");
+    g.fillStyle = gr; g.fillRect(0, 0, 8, 160);
+    return c;
+  }
+  function drawLabel(canvas: HTMLCanvasElement, text: string) {
+    var W = canvas.width, H = canvas.height;
+    var g = canvas.getContext("2d")!;
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = LABEL_COLOR; g.textAlign = "center"; g.textBaseline = "middle";
+    var size = 96;
+    g.font = "600 " + size + 'px "Literata", Georgia, serif';
+    while (g.measureText(text).width > W * 0.88 && size > 24) { size -= 4; g.font = "600 " + size + 'px "Literata", Georgia, serif'; }
+    g.fillText(text, W / 2, H / 2 + size * 0.05);
+  }
 
   var ctrls: any[] = [];
 
-  function build(canvas: HTMLCanvasElement) {
-    var tower = canvas.closest(".tower") as HTMLElement;
+  function build(canvasEl: HTMLCanvasElement) {
+    var tower = canvasEl.closest(".tower") as HTMLElement;
     if (!tower) return null;
     var renderer: THREE.WebGLRenderer;
-    try { renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true }); }
+    try { renderer = new THREE.WebGLRenderer({ canvas: canvasEl, alpha: true, antialias: true }); }
     catch (e) { return null; }
     renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 
     var scene = new THREE.Scene();
-    var env = new THREE.CanvasTexture(envCanvas);
-    env.mapping = THREE.EquirectangularReflectionMapping;
-    scene.environment = env;
+    // proper reflective environment (this is what makes it a mirror, not black)
+    var pmrem = new THREE.PMREMGenerator(renderer);
+    var src = new THREE.CanvasTexture(makeEnvCanvas());
+    src.mapping = THREE.EquirectangularReflectionMapping;
+    src.colorSpace = THREE.SRGBColorSpace;
+    scene.environment = pmrem.fromEquirectangular(src).texture;
+    src.dispose(); pmrem.dispose();
 
     var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 5000);
-    camera.position.set(0, 0, 1500);
-    camera.lookAt(0, 0, 0);
+    camera.position.set(0, 0, 1500); camera.lookAt(0, 0, 0);
 
-    scene.add(new THREE.HemisphereLight(0xeef4ff, 0x18233f, 0.55));
-    var key = new THREE.DirectionalLight(0xffffff, 0.85);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x9aa3b4, 0.45));
+    var key = new THREE.DirectionalLight(0xffffff, 0.6);
     key.position.set(-2.4, 3.6, 3); scene.add(key);
 
     var mat = new THREE.MeshStandardMaterial({ color: COLOR, metalness: METAL, roughness: ROUGH, envMapIntensity: ENV_I });
     var mesh = new THREE.Mesh(new RoundedBoxGeometry(1, 1, 1, 1, 0.2), mat);
-    mesh.rotation.x = PITCH;
-    mesh.rotation.y = REST_Y;
-    scene.add(mesh);
+    mesh.rotation.x = PITCH; mesh.rotation.y = REST_Y; scene.add(mesh);
 
+    // label baked onto the front face — child of the box, so it turns with it
+    var labelCanvas = document.createElement("canvas"); labelCanvas.width = 512; labelCanvas.height = 224;
+    var nameEl = tower.querySelector(".tower__name") as HTMLElement | null;
+    var nameText = nameEl ? (nameEl.textContent || "") : "";
+    drawLabel(labelCanvas, nameText);
+    var labelTex = new THREE.CanvasTexture(labelCanvas);
+    labelTex.colorSpace = THREE.SRGBColorSpace; labelTex.anisotropy = 4;
+    var label = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: labelTex, transparent: true, depthWrite: false }));
+    mesh.add(label);
+    if (nameEl) nameEl.style.display = "none"; // 3D label replaces the DOM one
+
+    var shownFallbackHidden = false;
     function size() {
-      var w = canvas.clientWidth, h = canvas.clientHeight;
-      if (!w || !h) return;
+      var w = canvasEl.clientWidth, h = canvasEl.clientHeight;
+      if (!w || !h) return false;
       renderer.setSize(w, h, false);
       camera.left = -w / 2; camera.right = w / 2; camera.top = h / 2; camera.bottom = -h / 2;
       camera.updateProjectionMatrix();
       var tw = tower.clientWidth, th = tower.clientHeight;
-      var d = tw * DEPTH_FRAC;
-      var r = Math.min(tw * RADIUS_FRAC, d * 0.45);
-      mesh.geometry.dispose();
-      mesh.geometry = new RoundedBoxGeometry(tw, th, d, 4, r);
+      var d = tw * DEPTH_FRAC, r = Math.min(tw * RADIUS_FRAC, d * 0.45);
+      mesh.geometry.dispose(); mesh.geometry = new RoundedBoxGeometry(tw, th, d, 4, r);
+      var lw = tw * 0.86, lh = lw * (224 / 512);
+      label.geometry.dispose(); label.geometry = new THREE.PlaneGeometry(lw, lh);
+      label.position.set(0, 0, d / 2 + 1.5);
+      return true;
     }
     function render() { renderer.render(scene, camera); }
-    size(); render();
+    function update() {
+      if (size()) { render(); if (!shownFallbackHidden) { shownFallbackHidden = true; var fb = tower.querySelector(".tower__fallback") as HTMLElement | null; if (fb) fb.style.display = "none"; } }
+    }
+    function redrawLabel() { drawLabel(labelCanvas, nameText); labelTex.needsUpdate = true; render(); }
 
-    return {
-      tower: tower,
-      setRy: function (ry: number) { mesh.rotation.y = ry; render(); },
-      resize: function () { size(); render(); },
-    };
+    return { tower: tower, el: canvasEl, setRy: function (ry: number) { mesh.rotation.y = ry; render(); }, update: update, redrawLabel: redrawLabel };
   }
 
-  for (var i = 0; i < canvases.length; i++) {
-    var c = build(canvases[i]);
-    if (c) { ctrls.push(c); (c.tower.querySelector(".tower__fallback") as HTMLElement).style.display = "none"; }
-  }
+  for (var i = 0; i < canvases.length; i++) { var c = build(canvases[i]); if (c) ctrls.push(c); }
   if (!ctrls.length) return; // WebGL unavailable -> CSS fallback boxes stay
 
-  // ---- turn toward the cursor (left/right only) ----
+  function updateAll() { for (var i = 0; i < ctrls.length; i++) ctrls[i].update(); }
+  // render once layout is real — robust to lazy-load timing (fixes the
+  // "2D gradient until you move the cursor" bug on back-navigation)
+  requestAnimationFrame(function () { updateAll(); requestAnimationFrame(updateAll); });
+  setTimeout(updateAll, 250);
+  if (window.ResizeObserver) { var ro = new ResizeObserver(updateAll); ctrls.forEach(function (c) { ro.observe(c.el); }); }
+  else { window.addEventListener("resize", updateAll); }
+  if (document.fonts && (document.fonts as any).ready) { (document.fonts as any).ready.then(function () { ctrls.forEach(function (c: any) { c.redrawLabel(); }); }); }
+
+  // ---- turn toward cursor (reduced) ----
   var raf = 0, mx = 0;
   function frame() {
-    raf = 0;
-    var halfW = window.innerWidth / 2;
+    raf = 0; var halfW = window.innerWidth / 2;
     for (var i = 0; i < ctrls.length; i++) {
       var r = ctrls[i].tower.getBoundingClientRect();
-      var nx = (mx - (r.left + r.width / 2)) / halfW;
-      if (nx > 1) nx = 1; if (nx < -1) nx = -1;
+      var nx = (mx - (r.left + r.width / 2)) / halfW; if (nx > 1) nx = 1; if (nx < -1) nx = -1;
       ctrls[i].setRy(nx * TILT);
     }
   }
@@ -109,8 +139,4 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
     window.addEventListener("pointermove", function (e) { mx = e.clientX; if (!raf) raf = requestAnimationFrame(frame); }, { passive: true });
     document.addEventListener("mouseleave", function () { ctrls.forEach(function (c) { c.setRy(REST_Y); }); });
   }
-  var rz: any;
-  function resizeAll() { ctrls.forEach(function (c) { c.resize(); }); }
-  window.addEventListener("resize", function () { clearTimeout(rz); rz = setTimeout(resizeAll, 140); });
-  window.addEventListener("load", function () { setTimeout(resizeAll, 150); });
 })();

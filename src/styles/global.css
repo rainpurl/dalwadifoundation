@@ -199,8 +199,7 @@ a{ color: inherit; }
 .foundation__logo{ display: flex; align-items: center; justify-content: center; }
 .foundation__logo img{ height: clamp(26px, 4.6vw, 40px); width: auto; display: block; }
 .app .foundation__logo{ display: none; }
-.foundation .metal{ justify-self: start; }
-.foundation .metal:last-of-type{ justify-self: end; }
+.foundation .metal{ justify-self: center; }
 
 /* brand split */
 .brandmark, .wordmark{
@@ -264,6 +263,8 @@ a{ color: inherit; }
 /* floating corner controls (no top bar) */
 .corner-tl{ position: fixed; top: clamp(16px,3.2vw,30px); left: clamp(16px,4vw,34px); z-index: 50; }
 .corner-tr{ position: fixed; top: clamp(16px,3.2vw,30px); right: clamp(16px,4vw,34px); z-index: 50; }
+.staff-link{ opacity: .75; transition: opacity .25s var(--ease), box-shadow .3s var(--ease); }
+.staff-link:hover, .staff-link:focus-visible{ opacity: 1; }
 .topbar{
   position: fixed; top: 0; left: 0; right: 0; height: clamp(64px,9vh,86px); z-index: 30;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
