@@ -112,7 +112,7 @@
   function renderPillars(arr: any[]){
     var box = document.getElementById('pillars-list')!;
     box.innerHTML = arr.map(function(p, i){
-      return '<div class="subblock" data-pi="' + i + '">' +
+      return '<div class="subblock" data-pi="' + i + '" data-key="' + esc(p.key || '') + '">' +
         '<div class="field"><label>Name (tower label)</label><input data-f="name" value="' + esc(p.name) + '"></div>' +
         '<div class="field"><label>Title</label><input data-f="title" value="' + esc(p.title) + '"></div>' +
         '<div class="field"><label>Body</label><textarea data-f="body">' + esc(p.body) + '</textarea></div>' +
@@ -148,7 +148,10 @@
         var lab = row.querySelector('[data-lf=label]').value, href = row.querySelector('[data-lf=href]').value;
         return { label: lab, href: href };
       }).filter(function(l: any){ return l.label || l.href; });
-      var key = (f.name || 'pillar').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'pillar';
+      // Keep the existing key stable so live.ts can still match this pillar by its
+      // baked data-p key after a rename. Only derive a key when none exists yet (a
+      // brand-new pillar, which needs a rebuild to appear as a column anyway).
+      var key = b.getAttribute('data-key') || (f.name || 'pillar').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'pillar';
       return { key: key, name: f.name, title: f.title, body: f.body, links: links };
     });
   }

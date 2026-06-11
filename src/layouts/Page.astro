@@ -36,12 +36,19 @@ const { title = site.name, description = 'The Dalwadi Foundation: art, water, ed
     <script is:inline>
       (function(){
         if (window.__dalwadiNav) return; window.__dalwadiNav = true;
-        var order = { '/contribute': 0, '/': 1, '/about': 2 }; // Support left, Home center, About right
+        var order = { '/': 1, '/about': 0, '/contribute': 2 }; // About left, Home center, Support right
         function path(u){ try { return (u && u.pathname) ? u.pathname : new URL(u, location.href).pathname; } catch(e){ return '/'; } }
         function idx(u){ var p = path(u).replace(/\/+$/, ''); if (!p) p = '/'; return (p in order) ? order[p] : 1; }
+        var back = false;
         document.addEventListener('astro:before-preparation', function(e){
           window.__dalwadiClientNav = true;
-          document.documentElement.classList.toggle('nav-back', idx(e.to) < idx(e.from));
+          back = idx(e.to) < idx(e.from);                         // heading toward a page on the left (lower index)
+        });
+        document.addEventListener('astro:before-swap', function(e){
+          // Astro replaces all <html> attributes on swap, so a class set on the current
+          // document gets wiped before the slide runs. Set it on the incoming document
+          // instead; it survives the swap and is in place when the animation plays.
+          if (e.newDocument && e.newDocument.documentElement) e.newDocument.documentElement.classList.toggle('nav-back', back);
         });
       })();
     </script>
