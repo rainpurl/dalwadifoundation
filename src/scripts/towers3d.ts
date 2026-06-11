@@ -18,21 +18,21 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
   var PITCH = 0.13;         // top-down view (keeps the flat square top visible)
   var DEPTH_FRAC = 1.08;    // depth ~= width -> square prism
   var RADIUS_FRAC = 0.085;  // subtle edge fillet
-  var COLOR = 0xe2e5ec;     // light silver base (keeps it silver, never black)
-  var METAL = 0.92, ROUGH = 0.14, ENV_I = 1.25;
+  var COLOR = 0xccd2dd;     // silver base
+  var METAL = 0.75, ROUGH = 0.16, ENV_I = 1.15;
   var LABEL_COLOR = "#0c1a40"; // navy label (reads on silver)
 
-  // bright silver environment the mirror reflects (white -> light steel)
+  // bright silver environment the surface reflects (kept light end-to-end so it
+  // never reflects dark -> never reads black)
   function makeEnvCanvas() {
     var c = document.createElement("canvas"); c.width = 8; c.height = 160;
     var g = c.getContext("2d")!;
     var gr = g.createLinearGradient(0, 0, 0, 160);
     gr.addColorStop(0.0, "#ffffff");
-    gr.addColorStop(0.4, "#eef1f6");
+    gr.addColorStop(0.35, "#e9edf4");
     gr.addColorStop(0.5, "#ffffff");
-    gr.addColorStop(0.62, "#d2d7e1");
-    gr.addColorStop(0.85, "#aab2c1");
-    gr.addColorStop(1.0, "#737b8b");
+    gr.addColorStop(0.65, "#dadfe9");
+    gr.addColorStop(1.0, "#c2c9d6");
     g.fillStyle = gr; g.fillRect(0, 0, 8, 160);
     return c;
   }
@@ -65,12 +65,11 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
     src.mapping = THREE.EquirectangularReflectionMapping;
     src.colorSpace = THREE.SRGBColorSpace;
     scene.environment = pmrem.fromEquirectangular(src).texture;
-    src.dispose(); pmrem.dispose();
 
     var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 5000);
     camera.position.set(0, 0, 1500); camera.lookAt(0, 0, 0);
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x9aa3b4, 0.45));
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xaeb6c5, 0.65));
     var key = new THREE.DirectionalLight(0xffffff, 0.6);
     key.position.set(-2.4, 3.6, 3); scene.add(key);
 
