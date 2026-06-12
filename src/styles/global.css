@@ -130,6 +130,11 @@ a{ color: inherit; }
 }
 .tower[data-pillar="safety"] .tp__actions a.metal:first-of-type:hover,
 .tower[data-pillar="safety"] .tp__actions a.metal:first-of-type:active{
+  background: linear-gradient(157deg,#f5e0ea 0%,#c06a8e 20%,#8a1553 49%,#a84e79 72%,#5f0e3a 100%);
+  color: #fff;
+}
+.tower[data-pillar="safety"] .tp__actions a.metal:nth-of-type(2):hover,
+.tower[data-pillar="safety"] .tp__actions a.metal:nth-of-type(2):active{
   background: linear-gradient(157deg,#f1e7fb 0%,#b79be1 20%,#6c2c91 49%,#a385d4 72%,#4c1d6b 100%);
   color: #fff;
 }
