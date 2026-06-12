@@ -42,7 +42,7 @@ img{ -webkit-user-drag: none; -webkit-touch-callout: none; pointer-events: none;
 html, body{ height: 100%; }
 /* On-brand glass cursor (blue / silver, reflective). Clickable elements use the brighter
    "lit" variant (see the rule near the end of this file). Editable fields keep a text caret. */
-html{ cursor: url('/cursor.png') 4 4, auto; }
+html{ cursor: url('/cursor.png') 3 3, auto; }
 body{
   margin: 0; font-family: var(--font); font-weight: 300; color: var(--ink); background: var(--sky);
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
@@ -111,6 +111,28 @@ a{ color: inherit; }
 .metal[disabled]{ opacity:.5; pointer-events:none; }
 .metal .arr{ transition: transform .25s var(--ease); }
 .metal:hover .arr{ transform: translateX(3px); }
+
+/* --- Partner-link hover/click colours per pillar. Only the gradient (and the text colour,
+       where the fill is dark) change, so the bevel + shimmer + lift are kept. The first
+       partner link in each pillar is the brand-coloured one; HAWC (safety's 2nd) stays silver. --- */
+.tower[data-pillar="art"] .tp__actions a.metal:first-of-type:hover,
+.tower[data-pillar="art"] .tp__actions a.metal:first-of-type:active{
+  background: linear-gradient(157deg,#fdfaf3 0%,#efe6d3 20%,#cbb892 49%,#e3d6bd 72%,#b09c74 100%);
+}
+.tower[data-pillar="water"] .tp__actions a.metal:first-of-type:hover,
+.tower[data-pillar="water"] .tp__actions a.metal:first-of-type:active{
+  background: linear-gradient(157deg,#fffdf2 0%,#fff0b0 20%,#ffd53b 49%,#ffe585 72%,#e8b81f 100%);
+}
+.tower[data-pillar="education"] .tp__actions a.metal:first-of-type:hover,
+.tower[data-pillar="education"] .tp__actions a.metal:first-of-type:active{
+  background: linear-gradient(157deg,#ffe3e7 0%,#ef6f7d 20%,#c8102e 49%,#dd5664 72%,#8f0a20 100%);
+  color: #fff;
+}
+.tower[data-pillar="safety"] .tp__actions a.metal:first-of-type:hover,
+.tower[data-pillar="safety"] .tp__actions a.metal:first-of-type:active{
+  background: linear-gradient(157deg,#f1e7fb 0%,#b79be1 20%,#6c2c91 49%,#a385d4 72%,#4c1d6b 100%);
+  color: #fff;
+}
 
 /* =========================================================
    LANDING - skyline
@@ -683,6 +705,6 @@ html{ overflow-x: clip; }
 /* Clickable elements use the brighter "lit" glass cursor (placed last so it wins over the
    cursor:pointer rules above). Editable fields keep a normal text caret. */
 a, button, summary, [role="button"], .metal, .rt-btn, .gthumb__x{
-  cursor: url('/cursor-link.png') 4 4, pointer;
+  cursor: url('/cursor-link.png') 3 3, pointer;
 }
 input, textarea, [contenteditable="true"]{ cursor: text; }
