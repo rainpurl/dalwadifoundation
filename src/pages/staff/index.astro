@@ -18,6 +18,13 @@ import { site } from '../../data/site';
   <div class="sheet-veil" id="sheet-veil"></div>
   <div class="toast" id="toast"></div>
 
+  <style is:global>
+    /* The staff portal uses the normal system cursor, not the site's glass cursor.
+       This style is only emitted on /staff, so the public pages are unaffected. */
+    html{ cursor: auto !important; }
+    a, button, summary, [role="button"], .metal, .rt-btn, .gthumb__x{ cursor: pointer !important; }
+  </style>
+
   <script>
     import '../../scripts/portal';
   </script>
