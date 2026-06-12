@@ -29,9 +29,10 @@
     if (!link){ link = document.createElement('link'); link.setAttribute('rel', 'icon'); document.head.appendChild(link); }
     link.setAttribute('href', src);
   }
+  function reveal(){ document.documentElement.classList.remove('content-loading'); }
   function run(){
   fetch('/api/content').then(function(r){ return r.ok ? r.json() : null; }).then(function(data){
-    if (!data) return;
+    if (!data){ reveal(); return; }
     if (data.settings && data.settings.font) applyFont(data.settings.font);
     if (data.settings && data.settings.logo) applyLogo(data.settings.logo);
     Array.prototype.forEach.call(document.querySelectorAll('[data-c]'), function(el){
@@ -45,15 +46,22 @@
       var v = get(data, el.getAttribute('data-mailto')); if (typeof v === 'string') el.setAttribute('href', 'mailto:' + v);
     });
     if (Array.isArray(data.pillars)){
-      var byKey: any = {}; data.pillars.forEach(function(p: any){ byKey[p.key] = p; });
-      Array.prototype.forEach.call(document.querySelectorAll('[data-p]'), function(el){
-        var parts = el.getAttribute('data-p').split('.'); var p = byKey[parts[0]]; if (!p) return;
-        setText(el, p[parts[1]]);
-      });
-      Array.prototype.forEach.call(document.querySelectorAll('[data-plink]'), function(el){
-        var parts = el.getAttribute('data-plink').split('.'); var p = byKey[parts[0]]; if (!p || !p.links || !p.links[+parts[1]]) return;
-        var link = p.links[+parts[1]];
-        if (parts[2] === 'href') el.setAttribute('href', link.href); else setText(el, link.label);
+      // Match each baked column to its saved pillar by the column's key, falling back to
+      // its position. Position is the reliable invariant: editing a pillar's name used to
+      // change its saved key, which then stopped matching the baked data-p key and left the
+      // whole column (label, title, body, links) un-patched. Index keeps it working.
+      var byKey: any = {}; data.pillars.forEach(function(p: any){ if (p && p.key) byKey[p.key] = p; });
+      Array.prototype.forEach.call(document.querySelectorAll('.tower[data-i]'), function(tw: any){
+        var p = byKey[tw.getAttribute('data-pillar')] || data.pillars[+tw.getAttribute('data-i')];
+        if (!p) return;
+        Array.prototype.forEach.call(tw.querySelectorAll('[data-p]'), function(el: any){
+          setText(el, p[el.getAttribute('data-p').split('.').pop()]);
+        });
+        Array.prototype.forEach.call(tw.querySelectorAll('[data-plink]'), function(el: any){
+          var parts = el.getAttribute('data-plink').split('.'); var link = p.links && p.links[+parts[1]];
+          if (!link) return;
+          if (parts[2] === 'href') el.setAttribute('href', link.href); else setText(el, link.label);
+        });
       });
     }
     if (Array.isArray(data.team)){
@@ -73,7 +81,8 @@
         });
       }
     }
-  }).catch(function(){ /* keep baked content */ });
+    reveal();
+  }).catch(reveal);
   }
   // View Transitions: modules run once, so patch on every page load (initial + nav).
   document.addEventListener('astro:page-load', run);

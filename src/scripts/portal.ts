@@ -9,7 +9,7 @@
 
   // The site font is whatever staff type into Dev tools (any Google Fonts family).
   // This is only the fallback shown when nothing has been set yet.
-  var DEFAULT_FONT = { label: "IBM Plex Serif", family: "IBM Plex Serif", stack: '"IBM Plex Serif", Georgia, serif' };
+  var DEFAULT_FONT = { label: "Cormorant", family: "Cormorant", stack: '"Cormorant", Georgia, serif' };
   function applyFont(f: any){
     if (!f || !f.stack) return;
     var fam = (f.family || "").trim();
@@ -74,12 +74,14 @@
         tile('pillars', 'Pillars', 'Edit copy &amp; links, or add a pillar') +
         tile('about', 'About page', 'Edit the About story') +
         tile('contribute', 'Contribute', 'Opens Zeffy donations in a new tab') +
+        tile('docs', 'Official Documents', 'Upload PDFs, DOCs, or links') +
         tile('dev', 'Dev tools', 'Status &amp; authorized users', true) +
       '</div>';
     rebindMetal();
     root.querySelector('[data-tile=pillars]')!.addEventListener('click', openPillars);
     root.querySelector('[data-tile=about]')!.addEventListener('click', openAbout);
     root.querySelector('[data-tile=contribute]')!.addEventListener('click', function(){ window.open('https://www.zeffy.com', '_blank', 'noopener'); });
+    root.querySelector('[data-tile=docs]')!.addEventListener('click', openDocs);
     root.querySelector('[data-tile=dev]')!.addEventListener('click', openDev);
   }
   function tile(key: string, t: string, d: string, dark?: boolean){
@@ -233,7 +235,7 @@
     openSheet('<h2>Dev tools</h2>' +
       '<h3>Site font</h3>' +
       '<div class="field"><label>Google font name, applies across the whole site</label>' +
-        '<input id="font-name" type="text" placeholder="e.g. IBM Plex Serif" value="' + esc(current.family || '') + '"></div>' +
+        '<input id="font-name" type="text" placeholder="e.g. Cormorant" value="' + esc(current.family || '') + '"></div>' +
       '<p class="note">Type any family from Google Fonts, spelled exactly (e.g. “IBM Plex Serif”, “Playfair Display”, “Lora”), then Apply.</p>' +
       '<div class="sheet__row"><button type="button" class="metal metal--sm" id="apply-font">Apply font</button></div>' +
       '<h3>Site logo</h3>' +
@@ -319,6 +321,88 @@
         });
       });
     }).catch(function(){ if (box) box.innerHTML = '<p class="note">Could not load users.</p>'; });
+  }
+
+  // ---------- OFFICIAL DOCUMENTS ----------
+  function openDocs(){
+    openSheet('<h2>Official Documents</h2>' +
+      '<div id="docs-list"><p class="note">Loading…</p></div>' +
+      '<h3>Add a file</h3>' +
+      '<div class="field"><label>PDF, DOC, or DOCX (up to 10 MB)</label>' +
+        '<input id="doc-file" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></div>' +
+      field('Display name (optional)', 'doc-file-name', '') +
+      '<div class="sheet__row"><button type="button" class="metal metal--dark metal--sm" id="doc-upload">Upload file</button></div>' +
+      '<h3>Or add a link</h3>' +
+      field('Link name', 'doc-link-name', '') +
+      field('URL', 'doc-link-url', '') +
+      '<div class="sheet__row"><button type="button" class="metal metal--sm" id="doc-add-link">Add link</button></div>' +
+      '<div class="sheet__row"><button type="button" class="metal metal--sm" id="cancel">Close</button></div>');
+    document.getElementById('cancel')!.addEventListener('click', closeSheet);
+    rebindMetal();
+    loadDocs();
+    document.getElementById('doc-upload')!.addEventListener('click', uploadDoc);
+    document.getElementById('doc-add-link')!.addEventListener('click', addDocLink);
+  }
+  function loadDocs(){
+    var box = document.getElementById('docs-list'); if (!box) return;
+    api('/api/docs').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      renderDocsList((d && d.docs) || []);
+    }).catch(function(){ if (box) box.innerHTML = '<p class="note">Could not load documents.</p>'; });
+  }
+  function renderDocsList(arr: any[]){
+    var box = document.getElementById('docs-list'); if (!box) return;
+    if (!arr.length){ box.innerHTML = '<p class="note">No documents yet.</p>'; return; }
+    box.innerHTML = arr.map(function(d: any){
+      var meta = d.kind === 'link' ? 'Link' : ((d.ext || 'file').toUpperCase() + (d.size ? ' · ' + fmtSize(d.size) : ''));
+      var open = d.kind === 'link' ? ' target="_blank" rel="noopener"' : '';
+      var label = d.kind === 'link' ? 'Open' : 'Download';
+      return '<div class="docrow" data-id="' + esc(d.id) + '">' +
+        '<span class="docrow__name">' + esc(d.name) + '</span>' +
+        '<span class="docrow__meta">' + esc(meta) + '</span>' +
+        '<a class="metal metal--sm" href="/api/docs/' + encodeURIComponent(d.id) + '"' + open + '>' + label + '</a>' +
+        '<button type="button" class="btn-x doc-del" data-id="' + esc(d.id) + '">Delete</button>' +
+      '</div>';
+    }).join('');
+    rebindMetal();
+    Array.prototype.forEach.call(box.querySelectorAll('.doc-del'), function(b: any){
+      b.addEventListener('click', function(){ deleteDoc(b.getAttribute('data-id')); });
+    });
+  }
+  function uploadDoc(){
+    var input = document.getElementById('doc-file') as HTMLInputElement;
+    var f = input && input.files && input.files[0];
+    if (!f){ toast('Choose a file first'); return; }
+    var ext = (f.name.split('.').pop() || '').toLowerCase();
+    if (['pdf', 'doc', 'docx'].indexOf(ext) === -1){ toast('Only PDF, DOC, or DOCX'); return; }
+    if (f.size > 10 * 1024 * 1024){ toast('That file is over 10 MB'); return; }
+    var name = (document.getElementById('doc-file-name') as HTMLInputElement).value.trim();
+    var fd = new FormData(); fd.append('file', f); if (name) fd.append('name', name);
+    toast('Uploading…');
+    // No api() helper here: let the browser set the multipart Content-Type with its boundary.
+    fetch('/api/docs', { method: 'POST', credentials: 'same-origin', body: fd }).then(function(r){
+      if (r.ok){ toast('Uploaded'); input.value = ''; (document.getElementById('doc-file-name') as HTMLInputElement).value = ''; loadDocs(); }
+      else { r.json().then(function(j){ toast((j && j.message) || 'Upload failed'); }).catch(function(){ toast('Upload failed'); }); }
+    }).catch(function(){ toast('Upload failed'); });
+  }
+  function addDocLink(){
+    var name = (document.getElementById('doc-link-name') as HTMLInputElement).value.trim();
+    var url = (document.getElementById('doc-link-url') as HTMLInputElement).value.trim();
+    if (!url){ toast('Enter a URL'); return; }
+    api('/api/docs', { method: 'POST', body: JSON.stringify({ kind: 'link', name: name, url: url }) }).then(function(r){
+      if (r.ok){ toast('Link added'); (document.getElementById('doc-link-name') as HTMLInputElement).value = ''; (document.getElementById('doc-link-url') as HTMLInputElement).value = ''; loadDocs(); }
+      else { toast('Could not add link'); }
+    }).catch(function(){ toast('Could not add link'); });
+  }
+  function deleteDoc(id: string){
+    if (!id) return;
+    api('/api/docs?id=' + encodeURIComponent(id), { method: 'DELETE' }).then(function(r){
+      if (r.ok){ toast('Deleted'); loadDocs(); } else { toast('Delete failed'); }
+    }).catch(function(){ toast('Delete failed'); });
+  }
+  function fmtSize(n: number){
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return Math.round(n / 1024) + ' KB';
+    return (n / 1048576).toFixed(1) + ' MB';
   }
 
   // ---------- helpers ----------

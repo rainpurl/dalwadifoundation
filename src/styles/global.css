@@ -14,13 +14,14 @@
   --line:     rgba(20,34,63,.12);
 
   /* one swappable site font (Dev tools can change --font live) */
-  --font: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --font: "Cormorant", Georgia, "Times New Roman", serif;
   --display: var(--font);
   --sans: var(--font);
 
   --tw: clamp(64px, 20vw, 232px);   /* tower width  */
   --th: clamp(300px, 75svh, 760px); /* tower height */
   --td: clamp(22px, 5vw, 60px);     /* tower depth  */
+  --foot: calc(var(--nav-h) + 16px);/* column extends this far below the screen so its base is never seen */
   --radius: clamp(8px, 1.5vw, 14px);
   --top-mid: clamp(30px, 4.6vw, 42px);
 
@@ -32,6 +33,12 @@
 @media (max-width: 640px){ :root{ --nav-h: 66px; --nav-mid: 33px; } }
 
 *{ box-sizing: border-box; }
+/* Discourage casual copying: text isn't selectable and images can't be dragged out, right
+   clicked to save, or long-pressed on mobile. Form fields stay selectable so the staff
+   portal remains usable. This is a deterrent only (it cannot stop screenshots or devtools). */
+*, *::before, *::after{ -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+input, textarea, [contenteditable="true"]{ -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
+img{ -webkit-user-drag: none; -webkit-touch-callout: none; pointer-events: none; }
 html, body{ height: 100%; }
 body{
   margin: 0; font-family: var(--font); font-weight: 300; color: var(--ink); background: var(--sky);
@@ -163,7 +170,7 @@ a{ color: inherit; }
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
 }
 .face--front{
-  width: var(--tw); height: var(--th);
+  width: var(--tw); height: calc(var(--th) + var(--foot));
   margin-left: calc(var(--tw) / -2); margin-top: calc(var(--th) / -2);
   transform: translateZ(calc(var(--td) / 2));
   background: linear-gradient(180deg,
@@ -178,7 +185,7 @@ a{ color: inherit; }
   mix-blend-mode: screen; transition: background-position .3s var(--ease-out);
 }
 .face--left{
-  width: var(--td); height: var(--th);
+  width: var(--td); height: calc(var(--th) + var(--foot));
   margin-left: calc(var(--td) / -2); margin-top: calc(var(--th) / -2);
   transform: rotateY(-90deg) translateZ(calc(var(--tw) / 2));
   background: linear-gradient(180deg, #243a73 0%, #0e1f4d 55%, #0a1838 100%);
@@ -186,7 +193,7 @@ a{ color: inherit; }
 }
 .face--left::after{ content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(255,255,255,.16), transparent 42%); opacity:.5; }
 .face--right{
-  width: var(--td); height: var(--th);
+  width: var(--td); height: calc(var(--th) + var(--foot));
   margin-left: calc(var(--td) / -2); margin-top: calc(var(--th) / -2);
   transform: rotateY(90deg) translateZ(calc(var(--tw) / 2));
   background: linear-gradient(180deg, #16285a 0%, #0a1840 60%, #060f2c 100%);
@@ -203,13 +210,13 @@ a{ color: inherit; }
 /* tower label - all caps, centered in the top half of the visible column face;
    vertical only when very narrow (mobile keeps it centered) */
 .tower__name{
-  position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); z-index: 2;
+  position: absolute; top: calc(var(--th) * 0.25); left: 50%; transform: translate(-50%, -50%); z-index: 2;
   white-space: nowrap; font-family: var(--font); font-weight: 600; text-transform: uppercase;
   font-size: clamp(.9rem, 1.6vw, 1.16rem); letter-spacing: .08em;
   color: var(--ivory); text-shadow: 0 1px 4px rgba(0,0,0,.55); pointer-events: none;
 }
 @media (max-width: 700px){
-  .tower__name{ top: 50%; transform: translate(-50%, -50%) rotate(-90deg); letter-spacing: .12em; font-size: .92rem; }
+  .tower__name{ top: calc(var(--th) * 0.5); transform: translate(-50%, -50%) rotate(-90deg); letter-spacing: .12em; font-size: .92rem; }
 }
 
 /* text behind the tower - ALWAYS rendered, never faded. The opaque tower hides
@@ -249,7 +256,7 @@ a{ color: inherit; }
 .app .foundation__logo{ visibility: hidden; }
 .foundation .metal{ justify-self: center; }
 
-/* Avoid a font swap on the splash wordmark: keep it hidden until IBM Plex Serif is
+/* Avoid a font swap on the splash wordmark: keep it hidden until Cormorant is
    ready. An inline head script removes .fonts-loading once the font loads (and after a
    timeout, and it never adds the class if JS is off, so this fails open). */
 html.fonts-loading .wordmark{ visibility: hidden; }
@@ -336,6 +343,11 @@ html.fonts-loading .wordmark{ visibility: hidden; }
 @media (max-width: 540px){ .topbar__home span{ display: none; } }
 
 .content{ max-width: 720px; margin: 0 auto; }
+/* Avoid a flash of the baked default copy on sub-pages: hide the content on a fresh load
+   until live.ts patches in the saved values (Page.astro adds .content-loading), then fade
+   it in. The class is removed after patching, on fetch failure, or by a 1.5s fail-safe. */
+.page .content{ transition: opacity .3s ease; }
+html.content-loading .page .content{ opacity: 0; }
 .kicker{ margin: 0 0 .9em; font-weight: 600; font-size: .86rem; letter-spacing: .06em; color: var(--eyebrow); }
 .title{ margin: 0 0 .35em; font-family: var(--font); font-weight: 600; font-size: clamp(2.2rem,6.4vw,3.5rem); line-height: 1.05; color: var(--navy); }
 .lede{ margin: 0 0 1.4em; font-size: clamp(1.08rem,2.5vw,1.3rem); line-height: 1.55; color: var(--ink); }
@@ -424,6 +436,11 @@ html.fonts-loading .wordmark{ visibility: hidden; }
 .userrow .em{ font-size: .95rem; }
 .userrow .lock{ font-size: .78rem; color: var(--ink-soft); margin-left: auto; }
 .btn-x{ margin-left: auto; border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: .35em .6em; font-size: .82rem; color: #cf4b4b; }
+.docrow{ display: grid; grid-template-columns: 1fr auto auto auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.docrow__name{ font-weight: 600; overflow-wrap: anywhere; }
+.docrow__meta{ color: var(--ink-soft); font-size: .82rem; white-space: nowrap; }
+.docrow .btn-x{ margin-left: 0; }
+@media (max-width: 480px){ .docrow{ grid-template-columns: 1fr auto auto; } .docrow__name{ grid-column: 1 / -1; } }
 
 .note{ font-size: .86rem; color: var(--ink-soft); }
 .toast{ position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); z-index: 120;

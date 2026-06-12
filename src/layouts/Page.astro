@@ -21,17 +21,27 @@ const { title = site.name, description = 'The Dalwadi Foundation: art, water, ed
         try {
           if (document.fonts && document.fonts.load) {
             Promise.race([
-              Promise.all([document.fonts.load('600 1em "IBM Plex Serif"'), document.fonts.load('300 1em "IBM Plex Serif"')]),
+              Promise.all([document.fonts.load('600 1em "Cormorant"'), document.fonts.load('300 1em "Cormorant"')]),
               new Promise(function(r){ setTimeout(r, 1500); })
             ]).then(done, done);
           } else { done(); }
         } catch (e) { done(); }
       })();
     </script>
+    <script is:inline>
+      (function(){
+        // Hide sub-page copy on a fresh load until live.ts swaps in the saved content, so
+        // the baked defaults don't flash first. Skipped on in-site navigations (the slide
+        // covers it); a timeout reveals anyway if the API is slow or never patches.
+        if (window.__dalwadiClientNav) return;
+        var de = document.documentElement; de.classList.add('content-loading');
+        setTimeout(function(){ de.classList.remove('content-loading'); }, 1500);
+      })();
+    </script>
     <link rel="icon" href="/favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
     <ViewTransitions />
     <script is:inline>
       (function(){

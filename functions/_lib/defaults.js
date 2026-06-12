@@ -3,7 +3,7 @@ export const OWNER = "pjbrahm369@gmail.com";
 
 export const DEFAULT_CONTENT = {
   settings: {
-    font: { label: "IBM Plex Serif", family: "IBM Plex Serif", stack: '"IBM Plex Serif", Georgia, serif' },
+    font: { label: "Cormorant", family: "Cormorant", stack: '"Cormorant", Georgia, serif' },
   },
   pillars: [
     { key: "art", name: "Art", title: "The Art Pillar",

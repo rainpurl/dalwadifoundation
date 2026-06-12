@@ -30,3 +30,28 @@ export async function putUsers(env, list) {
   if (!env.DALWADI_KV) throw new Error("KV not bound");
   await env.DALWADI_KV.put("users", JSON.stringify(withOwner(list)));
 }
+
+// ---- Official Documents ----
+// Metadata lives in the "docs" key (a JSON array). File bytes live in "doc:<id>".
+export async function getDocs(env) {
+  if (!env.DALWADI_KV) return [];
+  const raw = await env.DALWADI_KV.get("docs");
+  if (!raw) return [];
+  try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return []; }
+}
+export async function putDocs(env, list) {
+  if (!env.DALWADI_KV) throw new Error("KV not bound");
+  await env.DALWADI_KV.put("docs", JSON.stringify(Array.isArray(list) ? list : []));
+}
+export async function putDocBlob(env, id, buf) {
+  if (!env.DALWADI_KV) throw new Error("KV not bound");
+  await env.DALWADI_KV.put("doc:" + id, buf);
+}
+export async function getDocBlob(env, id) {
+  if (!env.DALWADI_KV) return null;
+  return await env.DALWADI_KV.get("doc:" + id, { type: "arrayBuffer" });
+}
+export async function deleteDocBlob(env, id) {
+  if (!env.DALWADI_KV) return;
+  await env.DALWADI_KV.delete("doc:" + id);
+}
