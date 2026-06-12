@@ -17,6 +17,29 @@ const { title = site.name, description = 'The Dalwadi Foundation: art, water, ed
     <meta name="theme-color" content="#0c1a40" />
     <script is:inline>
       (function(){
+        // Boot: apply the cached font before first paint (no font flash for return visitors) and
+        // start the content request immediately so it overlaps the bundle download. Runs once.
+        if (window.__dalwadiBoot) return; window.__dalwadiBoot = true;
+        try {
+          var c = JSON.parse(localStorage.getItem('dalwadi-content') || 'null');
+          if (c && c.settings && c.settings.font && c.settings.font.stack){
+            var f = c.settings.font;
+            document.documentElement.style.setProperty('--font', f.stack);
+            if (f.family){
+              var id = 'font-' + f.family.replace(/\s+/g, '-');
+              if (!document.getElementById(id)){
+                var l = document.createElement('link'); l.id = id; l.rel = 'stylesheet';
+                l.href = 'https://fonts.googleapis.com/css2?family=' + f.family.replace(/\s+/g, '+') + ':wght@300;400;500;600;700&display=swap';
+                document.head.appendChild(l);
+              }
+            }
+          }
+        } catch (e) {}
+        try { window.__contentFetch = fetch('/api/content', { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }); } catch (e) {}
+      })();
+    </script>
+    <script is:inline>
+      (function(){
         var el = document.documentElement; el.classList.add('fonts-loading');
         var done = function(){ el.classList.remove('fonts-loading'); };
         try {

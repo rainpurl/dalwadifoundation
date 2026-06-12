@@ -29,7 +29,10 @@
     var towersWrap = document.getElementById('towers');
     var towers = Array.prototype.slice.call(document.querySelectorAll('.tower'));
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var hoverCapable = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    // Use any-hover/any-pointer (not the primary pointer): a laptop with a touchpad or mouse is
+    // hover-capable even if it also has a touchscreen. Chromium reports touch as the PRIMARY pointer
+    // on such laptops, so the old "(hover: hover) and (pointer: fine)" wrongly fell back to taps.
+    var hoverCapable = window.matchMedia('(any-hover: hover) and (any-pointer: fine)').matches;
     function isPhone(){ return window.matchMedia('(max-width: 560px)').matches; }
 
     // ---- intro ----

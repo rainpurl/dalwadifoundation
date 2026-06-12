@@ -56,9 +56,12 @@
     });
     return root.innerHTML;
   }
-  function run(){
-  fetch('/api/content').then(function(r){ return r.ok ? r.json() : null; }).then(function(data){
-    if (!data){ reveal(); return; }
+  function readCache(){ try { return JSON.parse(localStorage.getItem('dalwadi-content') || 'null'); } catch (e) { return null; } }
+  function writeCache(d: any){ try { localStorage.setItem('dalwadi-content', JSON.stringify(d)); } catch (e) {} }
+  // Patch the whole page to a content object. Idempotent, so it can run with cached content first
+  // (instant correct render) and again with the fresh network copy.
+  function applyContent(data: any){
+    if (!data) return;
     if (data.settings && data.settings.font) applyFont(data.settings.font);
     if (data.settings && data.settings.logo) applyLogo(data.settings.logo);
     // Homepage announcement bar
@@ -170,8 +173,16 @@
       }
     }
     buildImpactStrip(data.pillars || []);
-    reveal();
-  }).catch(reveal);
+  }
+  // Repeat visits and in-site navigation: apply cached content instantly (no flash, no wait), then
+  // refresh from the network in the background. The very first load uses the early fetch kicked off
+  // by the boot script in the page head, so the request overlaps with the bundle download.
+  function run(){
+    var cached = readCache();
+    if (cached){ applyContent(cached); reveal(); }
+    var p = (window as any).__contentFetch; (window as any).__contentFetch = null;
+    if (!p) p = fetch('/api/content', { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; });
+    p.then(function(data: any){ if (data){ applyContent(data); writeCache(data); } reveal(); }).catch(reveal);
   }
   // ---- About-page side galleries ----
   function shuffle(a: any[]){
