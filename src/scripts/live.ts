@@ -235,9 +235,25 @@
       buildSide(right, shuffle(rightTiles));
     }).catch(function(){});
   }
+  var stripPillars: any = null;
+  // Re-measure the exact loop distance (where the second identical half begins) and feed it to the
+  // keyframe, so the carousel repeats with no gap or jump even after the font reflows the cards.
+  function measureStripShift(){
+    var track = document.getElementById('impact-strip-track');
+    if (!track) return;
+    var per = parseInt(track.getAttribute('data-perhalf') || '0', 10);
+    var first = track.children[0] as HTMLElement;
+    var second = track.children[per] as HTMLElement;
+    if (per > 0 && first && second){
+      var s = second.offsetLeft - first.offsetLeft;
+      if (s > 0) track.style.setProperty('--istrip-shift', s + 'px');
+    }
+  }
   // Contribute page: mirror every pillar's NUMBER cards (skip text cards) into one horizontal
-  // carousel, rendered twice so it loops seamlessly. Shares --gallery-dur with the About gallery.
+  // carousel. One set is repeated until it exceeds the viewport, then that unit is duplicated, so
+  // the loop is always seamless and gap-free. Shares --gallery-dur with the About gallery.
   function buildImpactStrip(pillars: any[]){
+    stripPillars = pillars;
     var track = document.getElementById('impact-strip-track');
     if (!track) return; // only the contribute page has this
     var cards: any[] = [];
@@ -247,15 +263,28 @@
       });
     });
     track.innerHTML = '';
-    if (!cards.length) return;
-    cards.concat(cards).forEach(function(c: any){
+    track.style.removeProperty('--istrip-shift');
+    if (!cards.length){ track.removeAttribute('data-perhalf'); return; }
+    function makeCard(c: any){
       var card = document.createElement('div'); card.className = 'istrip__card';
       var s = document.createElement('span'); s.className = 'istrip__stat'; s.textContent = c.stat || '';
       var l = document.createElement('span'); l.className = 'istrip__label'; l.textContent = c.label || '';
-      card.appendChild(s); card.appendChild(l); track.appendChild(card);
-    });
+      card.appendChild(s); card.appendChild(l); return card;
+    }
+    // Measure one set's width, then repeat it enough to comfortably exceed the viewport.
+    for (var i = 0; i < cards.length; i++) track.appendChild(makeCard(cards[i]));
+    var setW = track.scrollWidth;
+    track.innerHTML = '';
+    var reps = setW > 0 ? Math.max(1, Math.ceil((window.innerWidth * 1.3) / setW)) : 1;
+    for (var r = 0; r < reps * 2; r++){ for (var j = 0; j < cards.length; j++) track.appendChild(makeCard(cards[j])); }
+    track.setAttribute('data-perhalf', String(reps * cards.length)); // first card index of the 2nd half
+    measureStripShift();
+    if ((document as any).fonts && (document as any).fonts.ready){ (document as any).fonts.ready.then(measureStripShift); }
   }
   // View Transitions: modules run once, so patch on every page load (initial + nav).
   document.addEventListener('astro:page-load', run);
   document.addEventListener('astro:page-load', loadGallery);
+  // Keep the Support carousel filling the viewport (and seamless) across window resizes.
+  var stripResizeTimer: any;
+  window.addEventListener('resize', function(){ clearTimeout(stripResizeTimer); stripResizeTimer = setTimeout(function(){ buildImpactStrip(stripPillars); }, 200); });
 })();
