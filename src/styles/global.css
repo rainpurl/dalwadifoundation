@@ -259,7 +259,7 @@ a{ color: inherit; }
 /* Persistent donation iframe (ZeffyFrame.astro): preloaded once and hidden everywhere, shown
    only on the Support page (the one that renders .embed-wrap) so it opens with no buffer. */
 #zeffy-frame{
-  position: fixed; left: 0; top: 0; width: 100vw; height: calc(100svh - var(--nav-h) - 30px);
+  position: fixed; left: 0; top: 0; width: 100vw; height: calc(100svh - var(--nav-h) - 116px);
   border: 0; background: #003566; z-index: 5;
   opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .4s ease;
 }
@@ -592,8 +592,8 @@ html{ overflow-x: clip; }
 .app.is-impact .impact{ opacity: 1; visibility: visible; pointer-events: auto; }
 .impact__inner{ width: 100%; max-width: 1040px; text-align: center; margin: auto 0; }
 .impact__back{ position: fixed; top: 18px; left: 18px; z-index: 2; width: 3em; height: 3em; }
-/* While the impact subpage is open, the site title shrinks up to the very top. */
-.app.is-impact .wordmark{ transform: translate(-50%, calc(-50% - 45svh)) scale(.42); transition: transform .55s var(--ease); }
+/* The site title is hidden on the impact subpage (it could overlap the pillar title). */
+.app.is-impact .wordmark{ opacity: 0; visibility: hidden; pointer-events: none; }
 .impact__kicker{ margin: 0 0 .5em; font-size: .78rem; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); }
 .impact__title{ margin: 0 0 .28em; font-family: var(--font); font-weight: 600; font-size: clamp(2rem,5.5vw,3.1rem); color: var(--navy); }
 .impact__body{ margin: 0 auto 2em; max-width: 620px; font-size: clamp(1.02rem,2.3vw,1.2rem); line-height: 1.6; color: var(--ink-soft); }
@@ -628,7 +628,7 @@ html{ overflow-x: clip; }
 /* About / Support copyright */
 .page-cr{ margin: 3.2em 0 0; text-align: center; font-size: .8rem; color: var(--ink-soft); }
 .page-cr--embed{
-  position: fixed; left: 0; right: 0; bottom: var(--nav-h); height: 30px; margin: 0; z-index: 6;
+  position: fixed; left: 0; right: 0; bottom: var(--nav-h); height: 24px; margin: 0; z-index: 6;
   display: flex; align-items: center; justify-content: center; pointer-events: none;
   color: rgba(246,243,234,.7); font-size: .78rem;
 }
@@ -643,3 +643,37 @@ html{ overflow-x: clip; }
 .impactrow[data-ct="text"]{ grid-template-columns: 1fr auto; }
 .impactrow input, .impactrow textarea{ width: 100%; }
 .impactrow textarea{ min-height: 60px; }
+
+/* Slightly larger "Our impact" button (overrides metal--sm sizing). */
+.impact-btn{ font-size: .9rem; padding: .66em 1.12em; }
+
+/* Contribute page: horizontal carousel of the number cards, mirrored from the pillars.
+   Speed is shared with the About gallery via --gallery-dur. */
+.impact-strip{
+  position: fixed; left: 0; right: 0; bottom: calc(var(--nav-h) + 24px); height: 92px; z-index: 6;
+  overflow: hidden; pointer-events: none;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+          mask: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+.impact-strip__track{
+  display: flex; align-items: center; gap: 14px; height: 100%; padding: 0 16px; width: max-content;
+  animation: istrip-scroll var(--gallery-dur, 55s) linear infinite; will-change: transform;
+}
+.istrip__card{
+  flex: 0 0 auto; height: 66px; min-width: 116px; max-width: 230px; padding: 0 18px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: linear-gradient(160deg,#ffffff 0%,#eef3fa 100%); border: 1px solid rgba(255,255,255,.55);
+  border-radius: 12px; box-shadow: 0 10px 24px -14px rgba(0,0,0,.6);
+}
+.istrip__stat{ font-family: var(--font); font-weight: 600; font-size: 1.32rem; line-height: 1; color: var(--navy); }
+.istrip__label{
+  font-size: .68rem; line-height: 1.15; color: var(--ink-soft); text-align: center;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+@keyframes istrip-scroll{ from{ transform: translateX(0); } to{ transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce){ .impact-strip__track{ animation: none; } }
+/* On small screens the donation form needs the room: drop the strip and reclaim its height. */
+@media (max-width: 640px){
+  .impact-strip{ display: none; }
+  #zeffy-frame{ height: calc(100svh - var(--nav-h) - 24px); }
+}

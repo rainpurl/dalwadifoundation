@@ -169,6 +169,7 @@
         });
       }
     }
+    buildImpactStrip(data.pillars || []);
     reveal();
   }).catch(reveal);
   }
@@ -202,11 +203,13 @@
   function loadGallery(){
     var left = document.getElementById('gallery-left');
     var right = document.getElementById('gallery-right');
-    if (!left && !right) return; // only the About page carries these
+    var strip = document.getElementById('impact-strip-track'); // contribute page wants the same speed
+    if (!left && !right && !strip) return;
     fetch('/api/gallery').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
       var arr = (d && d.gallery) || [];
       var speed = d && typeof d.speed === 'number' ? d.speed : null;
       if (speed) document.documentElement.style.setProperty('--gallery-dur', speed + 's');
+      if (!left && !right) return; // contribute page: we only needed the speed, no photo tracks
       var TOTAL = 30, PER = 15;
       // Real photos (capped), split evenly so the same photo never lands on both sides.
       var leftTiles: any[] = [], rightTiles: any[] = [];
@@ -220,6 +223,26 @@
       buildSide(left, shuffle(leftTiles));
       buildSide(right, shuffle(rightTiles));
     }).catch(function(){});
+  }
+  // Contribute page: mirror every pillar's NUMBER cards (skip text cards) into one horizontal
+  // carousel, rendered twice so it loops seamlessly. Shares --gallery-dur with the About gallery.
+  function buildImpactStrip(pillars: any[]){
+    var track = document.getElementById('impact-strip-track');
+    if (!track) return; // only the contribute page has this
+    var cards: any[] = [];
+    (pillars || []).forEach(function(p: any){
+      (p && Array.isArray(p.impact) ? p.impact : []).forEach(function(c: any){
+        if (c && !c.text && (c.stat || c.label)) cards.push(c);
+      });
+    });
+    track.innerHTML = '';
+    if (!cards.length) return;
+    cards.concat(cards).forEach(function(c: any){
+      var card = document.createElement('div'); card.className = 'istrip__card';
+      var s = document.createElement('span'); s.className = 'istrip__stat'; s.textContent = c.stat || '';
+      var l = document.createElement('span'); l.className = 'istrip__label'; l.textContent = c.label || '';
+      card.appendChild(s); card.appendChild(l); track.appendChild(card);
+    });
   }
   // View Transitions: modules run once, so patch on every page load (initial + nav).
   document.addEventListener('astro:page-load', run);
