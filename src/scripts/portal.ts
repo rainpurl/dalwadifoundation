@@ -167,6 +167,10 @@
       field('Body (one paragraph per line)', 'a-body', (a.body || []).join('\n\n'), true) +
       '<h3>Team / About us</h3><div id="team-list"></div>' +
       '<div class="sheet__row"><button type="button" class="metal metal--sm" id="add-member">+ Add member</button></div>' +
+      '<h3>Custom sections</h3>' +
+      '<p class="note">Extra blocks shown on the About page after the intro. Select text and use the toolbar to format it.</p>' +
+      '<div id="sections-list"></div>' +
+      '<div class="sheet__row"><button type="button" class="metal metal--sm" id="add-section">+ Add section</button></div>' +
       '<h3>Photo gallery</h3>' +
       '<p class="note">Shown along the sides of the About page. Up to 30 photos, 5 MB each. Photos are optimized to AVIF in your browser before upload when it is supported. Changes here save immediately.</p>' +
       '<div id="gallery-grid" class="gallery-admin"><p class="note">Loading…</p></div>' +
@@ -178,8 +182,11 @@
       '<div class="sheet__row"><button type="button" class="metal metal--dark" id="save">Save</button>' +
       '<button type="button" class="metal metal--sm" id="cancel">Cancel</button></div>');
     renderTeam(state.content.team || []);
+    try { document.execCommand('styleWithCSS', false, false); } catch (e) {} // formatting uses tags, not inline styles
+    renderSections((a as any).sections || []);
     document.getElementById('cancel')!.addEventListener('click', closeSheet);
     document.getElementById('add-member')!.addEventListener('click', function(){ var t = readTeam(); t.push({ name: '', title: '', photo: '', bio: '' }); renderTeam(t); });
+    document.getElementById('add-section')!.addEventListener('click', function(){ var s = readSections(); s.push({ heading: '', html: '' }); renderSections(s); });
     loadGalleryAdmin();
     document.getElementById('gallery-add')!.addEventListener('click', uploadGalleryFiles);
     var speedEl = document.getElementById('gallery-speed') as HTMLInputElement;
@@ -189,6 +196,7 @@
         kicker: a.kicker || 'About',
         title: val('a-title'), lede: val('a-lede'),
         body: val('a-body').split(/\n\s*\n/).map(function(s){ return s.trim(); }).filter(Boolean),
+        sections: readSections(),
       };
       state.content.team = readTeam();
       saveContent(closeSheet);
@@ -215,6 +223,48 @@
       var m: any = {};
       Array.prototype.forEach.call(b.querySelectorAll('[data-mf]'), function(el: any){ m[el.getAttribute('data-mf')] = el.value; });
       return m;
+    });
+  }
+  function renderSections(arr: any[]){
+    var box = document.getElementById('sections-list'); if (!box) return;
+    box.innerHTML = arr.map(function(s: any, i: number){
+      return '<div class="subblock rt-block" data-si="' + i + '">' +
+        '<div class="field"><label>Heading (optional)</label><input data-sf="heading" value="' + esc(s.heading) + '"></div>' +
+        '<label class="rt-label">Content</label>' +
+        '<div class="rt-toolbar">' +
+          '<button type="button" class="rt-btn" data-cmd="bold" title="Bold"><b>B</b></button>' +
+          '<button type="button" class="rt-btn" data-cmd="italic" title="Italic"><i>I</i></button>' +
+          '<button type="button" class="rt-btn" data-cmd="underline" title="Underline"><u>U</u></button>' +
+          '<button type="button" class="rt-btn" data-cmd="createLink" title="Add link">Link</button>' +
+          '<button type="button" class="rt-btn" data-cmd="unlink" title="Remove link">Unlink</button>' +
+        '</div>' +
+        '<div class="rt-editor" contenteditable="true" data-sf="html">' + (s.html || '') + '</div>' +
+        '<div class="sheet__row"><button type="button" class="metal metal--sm rm-section" style="color:#cf4b4b">Remove section</button></div>' +
+      '</div>';
+    }).join('');
+    rebindMetal();
+    // Toolbar: mousedown (not click) so the editor keeps its text selection; execCommand acts on it.
+    Array.prototype.forEach.call(box.querySelectorAll('.rt-btn'), function(b: any){
+      b.addEventListener('mousedown', function(e: MouseEvent){
+        e.preventDefault();
+        var cmd = b.getAttribute('data-cmd');
+        if (cmd === 'createLink'){
+          var url = prompt('Link URL (https://...)');
+          if (url) document.execCommand('createLink', false, url);
+        } else {
+          document.execCommand(cmd, false);
+        }
+      });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.rm-section'), function(b: any){
+      b.addEventListener('click', function(){ var s = readSections(); s.splice(+b.closest('.rt-block').getAttribute('data-si'), 1); renderSections(s); });
+    });
+  }
+  function readSections(){
+    return Array.prototype.map.call(document.querySelectorAll('#sections-list .rt-block'), function(b: any){
+      var head = b.querySelector('[data-sf="heading"]');
+      var ed = b.querySelector('[data-sf="html"]');
+      return { heading: head ? head.value : '', html: ed ? ed.innerHTML : '' };
     });
   }
 

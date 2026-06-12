@@ -515,14 +515,16 @@ html.content-loading .page .content{ opacity: 0; }
 /* Lets a hovered photo grow inward over the page without ever adding a horizontal scrollbar. */
 html{ overflow-x: clip; }
 .gallery{
-  position: fixed; top: 0; bottom: var(--nav-h); width: clamp(118px, 13vw, 190px);
+  --gallery-w: clamp(120px, 12vw, 192px);
+  position: fixed; top: 0; bottom: var(--nav-h); width: var(--gallery-w);
   z-index: 1; pointer-events: none;
 }
-.gallery--left{ left: 0; }
-.gallery--right{ right: 0; }
+/* Centered in the whitespace: midway between the screen edge and the 720px centered copy. */
+.gallery--left{ left: calc((100vw - 720px) / 4 - var(--gallery-w) / 2); }
+.gallery--right{ right: calc((100vw - 720px) / 4 - var(--gallery-w) / 2); }
 .gallery__track{
-  display: flex; flex-direction: column; gap: clamp(14px, 2vw, 26px);
-  padding: 22px clamp(10px, 1.4vw, 20px);
+  display: flex; flex-direction: column; gap: clamp(26px, 3.4vw, 52px);
+  padding: 26px 0;
   animation: gallery-scroll var(--gallery-dur, 55s) linear infinite; will-change: transform;
 }
 .gallery--right .gallery__track{ animation-duration: calc(var(--gallery-dur, 55s) * 1.2); } /* desync the two sides */
@@ -538,6 +540,13 @@ html{ overflow-x: clip; }
   transform: scale(1.6) rotate(0deg); z-index: 6;
   box-shadow: 0 22px 52px rgba(8,16,38,.46);
 }
+/* Silver/blue filler tiles, used to pad the carousel out to a full set. */
+.gph{
+  width: 100%; aspect-ratio: 1; display: block; border-radius: 14px;
+  background: linear-gradient(150deg, #eef4fb 0%, #c3d4ec 48%, #9fb6da 100%);
+  box-shadow: 0 10px 28px rgba(8,16,38,.18);
+  transform: rotate(var(--rot, 0deg));
+}
 @keyframes gallery-scroll{ from { transform: translateY(0); } to { transform: translateY(-50%); } }
 @media (max-width: 1200px){ .gallery{ display: none; } }
 @media (prefers-reduced-motion: reduce){ .gallery__track{ animation: none; } }
@@ -552,3 +561,17 @@ html{ overflow-x: clip; }
   cursor: pointer; padding: 0; text-align: center;
 }
 .gthumb__x:hover{ background: #cf4b4b; }
+
+/* About custom sections (rendered on the light About page) */
+.prose a{ color: var(--navy); text-decoration: underline; text-underline-offset: 2px; }
+.about-sections .prose{ margin-top: 1.1em; }
+
+/* Rich text editor in the staff About sheet (matches .field's light styling) */
+.rt-label{ display: block; font-size: .82rem; font-weight: 600; letter-spacing: .02em; color: var(--ink-soft); margin: 0 0 .35rem; }
+.rt-toolbar{ display: flex; gap: 6px; margin-bottom: 8px; }
+.rt-btn{ min-width: 32px; height: 30px; padding: 0 9px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; font-size: .9rem; line-height: 1; }
+.rt-btn:hover{ background: var(--sky); }
+.rt-editor{ width: 100%; min-height: 96px; padding: .6em .7em; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfe; color: var(--ink); font: inherit; line-height: 1.6; }
+.rt-editor:focus{ outline: 2px solid rgba(12,26,64,.35); outline-offset: 1px; }
+.rt-editor a{ color: var(--navy); text-decoration: underline; }
+.rt-editor:empty::before{ content: 'Write here, then select text to format.'; color: var(--ink-soft); opacity: .55; }

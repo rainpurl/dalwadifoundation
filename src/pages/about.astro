@@ -18,6 +18,9 @@ const team = (site as any).team || [];
   <p class="lede" data-c="about.lede">{a.lede}</p>
   <div class="prose" data-c="about.body">{a.body.map((p) => <p>{p}</p>)}</div>
 
+  <!-- Staff-added rich text sections, filled at runtime by live.ts from about.sections. -->
+  <div class="about-sections" id="about-sections"></div>
+
   <div class="pillar-grid">
     {pillars.map((p) => (
       <div class="pcard">

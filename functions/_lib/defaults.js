@@ -30,6 +30,7 @@ export const DEFAULT_CONTENT = {
       "We don’t work alone. We back organizations already doing the work on the ground, and we help them do more of it.",
       "Each pillar is a long-term commitment, not a one-time gift: a partnership we grow alongside the people closest to the need.",
     ],
+    sections: [],
   },
   team: [
     { name: "Lorem Ipsum", title: "Founder & President", photo: "", bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },

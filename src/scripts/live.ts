@@ -30,6 +30,32 @@
     link.setAttribute('href', src);
   }
   function reveal(){ document.documentElement.classList.remove('content-loading'); }
+  // Whitelist-sanitize staff rich text before putting it on the public page: keep only basic
+  // inline tags, drop every attribute except a safe href on links. Parsed with DOMParser, whose
+  // document is inert (no scripts run, no image/onerror loads fire) so parsing is itself safe.
+  function sanitizeRich(html: string){
+    var root = new DOMParser().parseFromString(html || '', 'text/html').body;
+    if (!root) return '';
+    var ok: any = { B: 1, STRONG: 1, I: 1, EM: 1, U: 1, A: 1, P: 1, BR: 1, SPAN: 1 };
+    Array.prototype.slice.call(root.querySelectorAll('*')).forEach(function(el: any){
+      if (!el.parentNode) return;
+      if (!ok[el.tagName]){
+        while (el.firstChild) el.parentNode.insertBefore(el.firstChild, el);
+        el.parentNode.removeChild(el);
+        return;
+      }
+      Array.prototype.slice.call(el.attributes).forEach(function(at: any){
+        var n = at.name.toLowerCase();
+        if (el.tagName === 'A' && n === 'href'){
+          if (!/^(https?:|mailto:)/i.test(at.value || '')) el.removeAttribute(at.name);
+        } else {
+          el.removeAttribute(at.name);
+        }
+      });
+      if (el.tagName === 'A'){ el.setAttribute('target', '_blank'); el.setAttribute('rel', 'noopener noreferrer'); }
+    });
+    return root.innerHTML;
+  }
   function run(){
   fetch('/api/content').then(function(r){ return r.ok ? r.json() : null; }).then(function(data){
     if (!data){ reveal(); return; }
@@ -45,6 +71,18 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-mailto]'), function(el){
       var v = get(data, el.getAttribute('data-mailto')); if (typeof v === 'string') el.setAttribute('href', 'mailto:' + v);
     });
+    // Staff-added rich text sections on the About page.
+    var secBox = document.getElementById('about-sections');
+    if (secBox && data.about && Array.isArray(data.about.sections)){
+      secBox.innerHTML = '';
+      data.about.sections.forEach(function(s: any){
+        if (!s) return;
+        if (s.heading){ var h = document.createElement('h2'); h.className = 'section-h'; h.textContent = s.heading; secBox.appendChild(h); }
+        var body = document.createElement('div'); body.className = 'prose section-prose';
+        body.innerHTML = sanitizeRich(s.html || '');
+        secBox.appendChild(body);
+      });
+    }
     if (Array.isArray(data.pillars)){
       // Match each baked column to its saved pillar by the column's key, falling back to
       // its position. Position is the reliable invariant: editing a pillar's name used to
@@ -98,20 +136,30 @@
   }).catch(reveal);
   }
   // ---- About-page side galleries ----
-  function buildTrack(track: HTMLElement | null, imgs: any[]){
+  function shuffle(a: any[]){
+    for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  // Build one side from exactly PER tiles (photos plus silver/blue filler). The set is rendered
+  // twice so the vertical scroll loops forever with no seam; PER is large enough that one set is
+  // taller than the viewport, so a tile is never on screen at the same time as its duplicate.
+  function buildSide(track: HTMLElement | null, tiles: any[]){
     if (!track) return;
     track.innerHTML = '';
-    if (!imgs.length) return;
-    // One random tilt per photo, reused for its duplicate so the looping scroll never jumps.
-    var rots = imgs.map(function(){ return (Math.random() * 60 - 30).toFixed(1); });
-    // Render the set twice so translateY(-50%) loops seamlessly.
-    imgs.concat(imgs).forEach(function(it: any, i: number){
-      if (!it || !it.id) return;
-      var im = document.createElement('img');
-      im.className = 'gimg'; im.loading = 'lazy'; im.alt = '';
-      im.src = '/api/gallery/' + encodeURIComponent(it.id);
-      im.style.setProperty('--rot', rots[i % imgs.length] + 'deg');
-      track.appendChild(im);
+    if (!tiles.length) return;
+    var rots = tiles.map(function(){ return (Math.random() * 60 - 30).toFixed(1); });
+    tiles.concat(tiles).forEach(function(t: any, i: number){
+      var el: HTMLElement;
+      if (t && t.type === 'photo'){
+        var im = document.createElement('img');
+        im.className = 'gimg'; im.loading = 'lazy'; im.alt = '';
+        im.src = '/api/gallery/' + encodeURIComponent(t.id);
+        el = im;
+      } else {
+        el = document.createElement('div'); el.className = 'gph';
+      }
+      el.style.setProperty('--rot', rots[i % tiles.length] + 'deg');
+      track.appendChild(el);
     });
   }
   function loadGallery(){
@@ -122,9 +170,18 @@
       var arr = (d && d.gallery) || [];
       var speed = d && typeof d.speed === 'number' ? d.speed : null;
       if (speed) document.documentElement.style.setProperty('--gallery-dur', speed + 's');
-      var half = Math.ceil(arr.length / 2);
-      buildTrack(left, arr.slice(0, half));
-      buildTrack(right, arr.slice(half));
+      var TOTAL = 30, PER = 15;
+      // Real photos (capped), split evenly so the same photo never lands on both sides.
+      var leftTiles: any[] = [], rightTiles: any[] = [];
+      arr.slice(0, TOTAL).forEach(function(g: any, i: number){
+        if (!g || !g.id) return;
+        (i % 2 === 0 ? leftTiles : rightTiles).push({ type: 'photo', id: g.id });
+      });
+      // Pad each side to PER with filler tiles, then mix so photos and filler are interspersed.
+      while (leftTiles.length < PER) leftTiles.push({ type: 'ph' });
+      while (rightTiles.length < PER) rightTiles.push({ type: 'ph' });
+      buildSide(left, shuffle(leftTiles));
+      buildSide(right, shuffle(rightTiles));
     }).catch(function(){});
   }
   // View Transitions: modules run once, so patch on every page load (initial + nav).
