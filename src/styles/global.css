@@ -235,7 +235,7 @@ a{ color: inherit; }
 .towers.is-solo .tower.is-open .tower__panel{ width: min(330px, 86vw); }
 .tp__title{ margin: 0 0 .35em; font-family: var(--font); font-weight: 600; font-size: clamp(1.3rem, 2.6vw, 1.6rem); line-height: 1.08; color: var(--navy); }
 .tp__body{ margin: 0 0 1.15em; font-size: .92rem; line-height: 1.55; color: var(--ink-soft); }
-.tp__actions{ display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.tp__actions{ display: flex; flex-direction: column; align-items: center; gap: 8px; }
 
 /* foundation bar (white accents, symmetric) */
 .foundation{
@@ -645,7 +645,7 @@ html{ overflow-x: clip; }
 .impactrow textarea{ min-height: 60px; }
 
 /* Slightly larger "Our impact" button (overrides metal--sm sizing). */
-.impact-btn{ font-size: .9rem; padding: .66em 1.12em; }
+.impact-btn{ font-size: 1.05rem; padding: .8em 1.5em; }
 
 /* Contribute page: horizontal carousel of the number cards, mirrored from the pillars.
    Speed is shared with the About gallery via --gallery-dur. */
