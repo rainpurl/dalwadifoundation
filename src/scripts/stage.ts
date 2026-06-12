@@ -33,6 +33,10 @@
     // hover-capable even if it also has a touchscreen. Chromium reports touch as the PRIMARY pointer
     // on such laptops, so the old "(hover: hover) and (pointer: fine)" wrongly fell back to taps.
     var hoverCapable = window.matchMedia('(any-hover: hover) and (any-pointer: fine)').matches;
+    // Touch presence is separate from hover capability. Phones and tablets (incl. iPads, which now
+    // report any-hover/any-pointer because they support a stylus or trackpad) still need tap-to-open
+    // even though they read as hover-capable. maxTouchPoints is the reliable signal for a touchscreen.
+    var touchCapable = (navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
     function isPhone(){ return window.matchMedia('(max-width: 560px)').matches; }
 
     // ---- intro ----
@@ -108,7 +112,10 @@
       for (var i = 0; i < towers.length; i++){ var r = towers[i].getBoundingClientRect(); if (x >= r.left - 6 && x <= r.right + 6) return towers[i]; }
       return null;
     }
-    if (!hoverCapable){
+    // Attach tap-to-open on any touch device, on non-hover devices, and for reduced-motion users
+    // (who skip the hover pass above) - i.e. everyone EXCEPT a hover-only desktop, which stays
+    // hover-only. openTower() shows the centered modal card when isPhone(), the panel otherwise.
+    if (touchCapable || !hoverCapable || reduce){
       app.addEventListener('click', function(e: any){
         if (!app!.classList.contains('is-revealed')) return;
         if (e.target.closest('.pillar-modal') || e.target.closest('.foundation') || e.target.closest('.tp__actions')) return;

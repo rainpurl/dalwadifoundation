@@ -40,8 +40,9 @@
 input, textarea, [contenteditable="true"]{ -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
 img{ -webkit-user-drag: none; -webkit-touch-callout: none; pointer-events: none; }
 html, body{ height: 100%; }
-/* Custom site cursor; clickable elements keep cursor:pointer (the hand) for affordance. */
-html{ cursor: url('/cursor.png') 2 0, auto; }
+/* On-brand glass cursor (blue / silver, reflective). Clickable elements use the brighter
+   "lit" variant (see the rule near the end of this file). Editable fields keep a text caret. */
+html{ cursor: url('/cursor.png') 4 4, auto; }
 body{
   margin: 0; font-family: var(--font); font-weight: 300; color: var(--ink); background: var(--sky);
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
@@ -679,3 +680,9 @@ html{ overflow-x: clip; }
   .impact-strip{ display: none; }
   #zeffy-frame{ height: calc(100svh - var(--nav-h) - 24px); }
 }
+/* Clickable elements use the brighter "lit" glass cursor (placed last so it wins over the
+   cursor:pointer rules above). Editable fields keep a normal text caret. */
+a, button, summary, [role="button"], .metal, .rt-btn, .gthumb__x{
+  cursor: url('/cursor-link.png') 4 4, pointer;
+}
+input, textarea, [contenteditable="true"]{ cursor: text; }
