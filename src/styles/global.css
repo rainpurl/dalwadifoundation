@@ -211,12 +211,13 @@ a{ color: inherit; }
    vertical only when very narrow (mobile keeps it centered) */
 .tower__name{
   position: absolute; top: calc(var(--th) * 0.25); left: 50%; transform: translate(-50%, -50%); z-index: 2;
-  white-space: nowrap; font-family: var(--font); font-weight: 600; text-transform: uppercase;
+  max-width: calc(var(--tw) - 14px); text-align: center; line-height: 1.12; overflow-wrap: break-word;
+  font-family: var(--font); font-weight: 600; text-transform: uppercase;
   font-size: clamp(.9rem, 1.6vw, 1.16rem); letter-spacing: .08em;
   color: var(--ivory); text-shadow: 0 1px 4px rgba(0,0,0,.55); pointer-events: none;
 }
 @media (max-width: 700px){
-  .tower__name{ top: calc(var(--th) * 0.5); transform: translate(-50%, -50%) rotate(-90deg); letter-spacing: .12em; font-size: .92rem; }
+  .tower__name{ top: calc(var(--th) * 0.5); transform: translate(-50%, -50%) rotate(-90deg); white-space: nowrap; max-width: none; letter-spacing: .12em; font-size: .92rem; }
 }
 
 /* text behind the tower - ALWAYS rendered, never faded. The opaque tower hides
@@ -522,9 +523,9 @@ html{ overflow-x: clip; }
 .gallery__track{
   display: flex; flex-direction: column; gap: clamp(14px, 2vw, 26px);
   padding: 22px clamp(10px, 1.4vw, 20px);
-  animation: gallery-scroll 85s linear infinite; will-change: transform;
+  animation: gallery-scroll var(--gallery-dur, 55s) linear infinite; will-change: transform;
 }
-.gallery--right .gallery__track{ animation-duration: 102s; } /* desync the two sides */
+.gallery--right .gallery__track{ animation-duration: calc(var(--gallery-dur, 55s) * 1.2); } /* desync the two sides */
 /* Pause this side while any of its photos is hovered (the container is click-through). */
 .gallery__track:has(.gimg:hover){ animation-play-state: paused; }
 .gimg{

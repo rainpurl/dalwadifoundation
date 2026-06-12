@@ -1,6 +1,6 @@
 import { json } from "../_lib/respond.js";
 import { requireUser } from "../_lib/auth.js";
-import { getGallery, putGallery, putGalleryBlob, deleteGalleryBlob } from "../_lib/kv.js";
+import { getGallery, putGallery, putGalleryBlob, deleteGalleryBlob, getGallerySpeed, putGallerySpeed } from "../_lib/kv.js";
 
 const MAX = 5 * 1024 * 1024; // 5 MB per photo
 const MAX_COUNT = 30;
@@ -17,13 +17,29 @@ function extFor(ct) {
 
 // Public: the About page reads this to render the galleries.
 export async function onRequestGet(context) {
-  return json({ gallery: await getGallery(context.env) }, 200, { "Cache-Control": "no-store" });
+  return json(
+    { gallery: await getGallery(context.env), speed: await getGallerySpeed(context.env) },
+    200,
+    { "Cache-Control": "no-store" }
+  );
 }
 
 export async function onRequestPost(context) {
   const email = await requireUser(context);
   if (!email) return json({ error: "unauthorized" }, 401);
   const ct = context.request.headers.get("content-type") || "";
+
+  // Set the carousel scroll speed (JSON body, no file): seconds per loop, lower is faster.
+  if (ct.indexOf("application/json") > -1) {
+    let body = {};
+    try { body = await context.request.json(); } catch (e) {}
+    let n = parseInt(body && body.speed, 10);
+    if (!isFinite(n)) return json({ error: "bad speed" }, 400);
+    n = Math.max(10, Math.min(180, n));
+    await putGallerySpeed(context.env, n);
+    return json({ ok: true, speed: n });
+  }
+
   if (ct.indexOf("multipart/form-data") === -1) return json({ error: "bad request" }, 400);
 
   const gallery = await getGallery(context.env);

@@ -172,6 +172,9 @@
       '<div id="gallery-grid" class="gallery-admin"><p class="note">Loading…</p></div>' +
       '<div class="field"><label>Add photos</label><input id="gallery-file" type="file" accept="image/*" multiple></div>' +
       '<div class="sheet__row"><button type="button" class="metal metal--sm" id="gallery-add">Add photos</button></div>' +
+      '<div class="field"><label>Carousel scroll speed <span class="note" id="gallery-speed-note"></span></label>' +
+      '<input id="gallery-speed" type="range" min="15" max="130" step="5" value="55">' +
+      '<span class="note">Drag left for faster, right for slower. Saves when you let go.</span></div>' +
       '<div class="sheet__row"><button type="button" class="metal metal--dark" id="save">Save</button>' +
       '<button type="button" class="metal metal--sm" id="cancel">Cancel</button></div>');
     renderTeam(state.content.team || []);
@@ -179,6 +182,8 @@
     document.getElementById('add-member')!.addEventListener('click', function(){ var t = readTeam(); t.push({ name: '', title: '', photo: '', bio: '' }); renderTeam(t); });
     loadGalleryAdmin();
     document.getElementById('gallery-add')!.addEventListener('click', uploadGalleryFiles);
+    var speedEl = document.getElementById('gallery-speed') as HTMLInputElement;
+    if (speedEl){ speedEl.addEventListener('input', updateGallerySpeedNote); speedEl.addEventListener('change', saveGallerySpeed); }
     document.getElementById('save')!.addEventListener('click', function(){
       state.content.about = {
         kicker: a.kicker || 'About',
@@ -417,7 +422,20 @@
     var box = document.getElementById('gallery-grid'); if (!box) return;
     api('/api/gallery').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
       renderGalleryAdmin((d && d.gallery) || []);
+      var speedEl = document.getElementById('gallery-speed') as HTMLInputElement;
+      if (speedEl){ speedEl.value = String((d && typeof d.speed === 'number') ? d.speed : 55); updateGallerySpeedNote(); }
     }).catch(function(){ if (box) box.innerHTML = '<p class="note">Could not load photos.</p>'; });
+  }
+  function updateGallerySpeedNote(){
+    var el = document.getElementById('gallery-speed') as HTMLInputElement;
+    var note = document.getElementById('gallery-speed-note');
+    if (el && note) note.textContent = '(' + el.value + 's per loop)';
+  }
+  function saveGallerySpeed(){
+    var el = document.getElementById('gallery-speed') as HTMLInputElement; if (!el) return;
+    api('/api/gallery', { method: 'POST', body: JSON.stringify({ speed: parseInt(el.value, 10) }) }).then(function(r){
+      if (r.ok){ toast('Speed saved'); } else { toast('Could not save speed'); }
+    }).catch(function(){ toast('Could not save speed'); });
   }
   function renderGalleryAdmin(arr: any[]){
     var box = document.getElementById('gallery-grid'); if (!box) return;

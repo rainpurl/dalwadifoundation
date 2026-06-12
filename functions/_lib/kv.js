@@ -80,3 +80,14 @@ export async function deleteGalleryBlob(env, id) {
   if (!env.DALWADI_KV) return;
   await env.DALWADI_KV.delete("gimg:" + id);
 }
+export async function getGallerySpeed(env) {
+  if (!env.DALWADI_KV) return null;
+  const raw = await env.DALWADI_KV.get("gallery-speed");
+  if (!raw) return null;
+  const n = parseInt(raw, 10);
+  return isFinite(n) ? n : null;
+}
+export async function putGallerySpeed(env, n) {
+  if (!env.DALWADI_KV) throw new Error("KV not bound");
+  await env.DALWADI_KV.put("gallery-speed", String(n));
+}

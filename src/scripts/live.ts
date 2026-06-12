@@ -120,6 +120,8 @@
     if (!left && !right) return; // only the About page carries these
     fetch('/api/gallery').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
       var arr = (d && d.gallery) || [];
+      var speed = d && typeof d.speed === 'number' ? d.speed : null;
+      if (speed) document.documentElement.style.setProperty('--gallery-dur', speed + 's');
       var half = Math.ceil(arr.length / 2);
       buildTrack(left, arr.slice(0, half));
       buildTrack(right, arr.slice(half));
