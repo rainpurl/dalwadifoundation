@@ -40,6 +40,8 @@
 input, textarea, [contenteditable="true"]{ -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
 img{ -webkit-user-drag: none; -webkit-touch-callout: none; pointer-events: none; }
 html, body{ height: 100%; }
+/* Custom site cursor; clickable elements keep cursor:pointer (the hand) for affordance. */
+html{ cursor: url('/cursor.png') 2 0, auto; }
 body{
   margin: 0; font-family: var(--font); font-weight: 300; color: var(--ink); background: var(--sky);
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;

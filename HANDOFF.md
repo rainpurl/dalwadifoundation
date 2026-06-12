@@ -104,7 +104,14 @@ A cinematic one-page landing site for **The Dalwadi Foundation**, a nonprofit or
 
 **Deployment is unblocked.** The Cloudflare Pages project was deleted and recreated, it's connected to Git and building again, and the **CSS-columns revert is live** (`src/scripts/towers3d.ts` was deleted on github.com; the `three` dependency is gone; build is green and homepage JS is ~4.4 kB gzipped, down from ~117 kB on the old WebGL version).
 
-**This session's changes.** Eleven batches; all still need pushing (see the note below). Newest first.
+**This session's changes.** Twelve batches; all still need pushing (see the note below). Newest first.
+
+**Batch 12 - polish pass (impact button, Support carousel, mobile pillars, custom cursor):**
+
+- **Custom cursor.** The site's default cursor is now the supplied glossy blue arrow (`public/cursor.png`, a NEW file, 32x36 with its hotspot at the tip). Set via `html{ cursor: url('/cursor.png') 2 0, auto; }` in `global.css`. Clickable elements keep `cursor: pointer` (the hand) for affordance; the Zeffy iframe is a separate document so its cursor is unaffected.
+- **"Our impact" button** was enlarged again (`.impact-btn` font-size 1.05rem, roomier padding) and `.tp__actions` is now a centered column so the button always sits on its own line with the partner link(s) stacked beneath it.
+- **Support-page carousel is now truly infinite.** It was two copies scrolled by -50%, which left a gap whenever one copy was narrower than the screen. `buildImpactStrip` now repeats the number cards until they exceed ~1.3x the viewport, duplicates that unit, and `measureStripShift` sets `--istrip-shift` to the exact pixel distance to the second copy (re-measured on `fonts.ready`, rebuilt on resize) so the keyframe loops with no gap or jump.
+- **Mobile pillars are tall again.** The `<=560px` block was capping `--th` at `clamp(150px, 32svh, 270px)`; it is now `clamp(300px, 75svh, 760px)` so the columns rise to ~75% of the screen height on phones. Mobile width/depth and all other behaviour unchanged.
 
 **Batch 11 - cross-browser hover fix, faster loads, no stale-version flash:**
 
@@ -195,7 +202,7 @@ A cinematic one-page landing site for **The Dalwadi Foundation**, a nonprofit or
 
 **The columns:** each is a four-face **opaque** CSS prism (silver→royal→navy gradient front with a moving glare streak, darker navy side faces, a light silver top cap) that turns left/right toward the cursor. Tuning knobs live in `stage.ts` (`TILT_MAX`, and the `--ry`/`--shine` math).
 
-> ⚠️ **This zip is AHEAD of the GitHub repo** (eleven batches of changes). Upload these changed files on github.com and let Cloudflare rebuild. **No file deletions are needed** (unlike the WebGL revert). Files touched across the batches: `astro.config.mjs`, `src/styles/global.css`, `src/layouts/Base.astro`, `src/layouts/Page.astro`, `src/pages/index.astro`, `src/pages/about.astro`, `src/pages/contribute.astro`, `src/pages/staff/index.astro`, `src/components/Foundation.astro`, `src/scripts/stage.ts`, `src/scripts/metal.ts`, `src/scripts/live.ts`, `src/scripts/portal.ts`, `src/components/Towers.astro`, `src/data/pillars.ts`, `src/data/site.ts`, `functions/_lib/defaults.js`, `functions/_lib/kv.js`, `functions/api/content.js`, and `HANDOFF.md`. **NEW files (Batch 5, Official Documents):** `functions/api/docs.js` and `functions/api/docs/[id].js` (the `docs/` subfolder is new). **NEW files (Batch 7):** `src/components/ZeffyFrame.astro`, `functions/api/gallery.js`, and `functions/api/gallery/[id].js` (the `gallery/` subfolder under `functions/api/` is new, so create it when uploading the nested `[id].js`).
+> ⚠️ **This zip is AHEAD of the GitHub repo** (twelve batches of changes). Upload these changed files on github.com and let Cloudflare rebuild. **No file deletions are needed** (unlike the WebGL revert). Files touched across the batches: `astro.config.mjs`, `src/styles/global.css`, `src/layouts/Base.astro`, `src/layouts/Page.astro`, `src/pages/index.astro`, `src/pages/about.astro`, `src/pages/contribute.astro`, `src/pages/staff/index.astro`, `src/components/Foundation.astro`, `src/scripts/stage.ts`, `src/scripts/metal.ts`, `src/scripts/live.ts`, `src/scripts/portal.ts`, `src/components/Towers.astro`, `src/data/pillars.ts`, `src/data/site.ts`, `functions/_lib/defaults.js`, `functions/_lib/kv.js`, `functions/api/content.js`, and `HANDOFF.md`. **NEW file (Batch 12, custom cursor):** `public/cursor.png` (drop it in the existing `public/` folder alongside `favicon.png`/`logo.png`). **NEW files (Batch 5, Official Documents):** `functions/api/docs.js` and `functions/api/docs/[id].js` (the `docs/` subfolder is new). **NEW files (Batch 7):** `src/components/ZeffyFrame.astro`, `functions/api/gallery.js`, and `functions/api/gallery/[id].js` (the `gallery/` subfolder under `functions/api/` is new, so create it when uploading the nested `[id].js`).
 
 ---
 
