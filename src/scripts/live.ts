@@ -63,6 +63,19 @@
           if (parts[2] === 'href') el.setAttribute('href', link.href); else setText(el, link.label);
         });
       });
+      // About page: rebuild the pillar cards from the same data so they stay in sync with
+      // the columns, including when a pillar is added or removed in the portal.
+      var grid = document.querySelector('.pillar-grid');
+      if (grid){
+        grid.innerHTML = '';
+        data.pillars.forEach(function(p: any){
+          if (!p) return;
+          var card = document.createElement('div'); card.className = 'pcard';
+          var h = document.createElement('h3'); h.textContent = p.title || '';
+          var b = document.createElement('p'); b.textContent = p.body || '';
+          card.appendChild(h); card.appendChild(b); grid.appendChild(card);
+        });
+      }
     }
     if (Array.isArray(data.team)){
       var tbox = document.getElementById('team');

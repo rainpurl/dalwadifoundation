@@ -42,6 +42,10 @@ const { title = site.name, description = 'The Dalwadi Foundation: art, water, ed
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+    <!-- Warm the Zeffy donation embed in the background so the Support page opens with little to no load delay -->
+    <link rel="preconnect" href="https://www.zeffy.com" />
+    <link rel="dns-prefetch" href="https://www.zeffy.com" />
+    <link rel="prefetch" href="https://www.zeffy.com/embed/donation-form/d-lanthropy" as="document" />
     <ViewTransitions />
     <script is:inline>
       (function(){
@@ -69,7 +73,7 @@ const { title = site.name, description = 'The Dalwadi Foundation: art, water, ed
     <main class="page" id="main">
       <div class="content"><slot /></div>
     </main>
-    <Foundation transition:name="sitenav" />
+    <Foundation />
     <script>
       import '../scripts/metal';
       import '../scripts/live';

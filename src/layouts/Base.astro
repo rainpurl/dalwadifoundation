@@ -44,6 +44,11 @@ const {
       rel="stylesheet"
     />
 
+    <!-- Warm the Zeffy donation embed in the background so the Support page opens with little to no load delay -->
+    <link rel="preconnect" href="https://www.zeffy.com" />
+    <link rel="dns-prefetch" href="https://www.zeffy.com" />
+    <link rel="prefetch" href="https://www.zeffy.com/embed/donation-form/d-lanthropy" as="document" />
+
     <ViewTransitions />
     <script is:inline>
       (function(){

@@ -254,7 +254,7 @@ a{ color: inherit; }
 .foundation__logo{ display: flex; align-items: center; justify-content: center; }
 .foundation__logo img{ height: clamp(26px, 4.6vw, 40px); width: auto; display: block; }
 .app .foundation__logo{ visibility: hidden; }
-.foundation .metal{ justify-self: center; }
+.foundation .metal{ justify-self: center; font-size: clamp(.9rem, 2.4vw, 1rem); padding: .66em 1.15em; }
 
 /* Avoid a font swap on the splash wordmark: keep it hidden until Cormorant is
    ready. An inline head script removes .fonts-loading once the font loads (and after a
