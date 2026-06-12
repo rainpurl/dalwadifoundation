@@ -461,7 +461,7 @@ html.content-loading .page .content{ opacity: 0; }
    PHONES - small static pillars; tap lifts one + shows a centered card
    ========================================================= */
 @media (max-width: 560px){
-  :root{ --tw: clamp(44px, 15vw, 68px); --th: clamp(150px, 32svh, 270px); --td: clamp(13px, 3.6vw, 20px); }
+  :root{ --tw: clamp(44px, 15vw, 68px); --th: clamp(300px, 75svh, 760px); --td: clamp(13px, 3.6vw, 20px); }
   .towers{ gap: clamp(10px, 3.2vw, 18px); width: min(440px, 94vw); }
   .app.is-revealed .tower__bob{ animation: none; }      /* no idle wave */
   .towers.is-solo .tower:not(.is-open){ opacity: 1; }    /* siblings stay visible */
