@@ -1,0 +1,15 @@
+---
+// One donation iframe for the whole site. transition:persist keeps it alive across in-site
+// navigation, so it loads ONCE (in the background, hidden) and is already rendered when the
+// Support page opens, with no buffer. CSS keeps it off until a page renders .embed-wrap
+// (the Support page), then it is shown filling the area above the navbar.
+---
+<iframe
+  id="zeffy-frame"
+  transition:persist="zeffydonateframe"
+  title="Donation form powered by Zeffy"
+  src="https://www.zeffy.com/embed/donation-form/d-lanthropy"
+  allowpaymentrequest
+  allowtransparency="true"
+  loading="eager"
+></iframe>

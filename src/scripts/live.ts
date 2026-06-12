@@ -97,6 +97,35 @@
     reveal();
   }).catch(reveal);
   }
+  // ---- About-page side galleries ----
+  function buildTrack(track: HTMLElement | null, imgs: any[]){
+    if (!track) return;
+    track.innerHTML = '';
+    if (!imgs.length) return;
+    // One random tilt per photo, reused for its duplicate so the looping scroll never jumps.
+    var rots = imgs.map(function(){ return (Math.random() * 60 - 30).toFixed(1); });
+    // Render the set twice so translateY(-50%) loops seamlessly.
+    imgs.concat(imgs).forEach(function(it: any, i: number){
+      if (!it || !it.id) return;
+      var im = document.createElement('img');
+      im.className = 'gimg'; im.loading = 'lazy'; im.alt = '';
+      im.src = '/api/gallery/' + encodeURIComponent(it.id);
+      im.style.setProperty('--rot', rots[i % imgs.length] + 'deg');
+      track.appendChild(im);
+    });
+  }
+  function loadGallery(){
+    var left = document.getElementById('gallery-left');
+    var right = document.getElementById('gallery-right');
+    if (!left && !right) return; // only the About page carries these
+    fetch('/api/gallery').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      var arr = (d && d.gallery) || [];
+      var half = Math.ceil(arr.length / 2);
+      buildTrack(left, arr.slice(0, half));
+      buildTrack(right, arr.slice(half));
+    }).catch(function(){});
+  }
   // View Transitions: modules run once, so patch on every page load (initial + nav).
   document.addEventListener('astro:page-load', run);
+  document.addEventListener('astro:page-load', loadGallery);
 })();

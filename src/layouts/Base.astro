@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { ViewTransitions } from 'astro:transitions';
+import ZeffyFrame from '../components/ZeffyFrame.astro';
 
 interface Props {
   title?: string;
@@ -65,12 +66,23 @@ const {
           // Astro replaces all <html> attributes on swap, so a class set on the current
           // document gets wiped before the slide runs. Set it on the incoming document
           // instead; it survives the swap and is in place when the animation plays.
-          if (e.newDocument && e.newDocument.documentElement) e.newDocument.documentElement.classList.toggle('nav-back', back);
+          if (!e.newDocument || !e.newDocument.documentElement) return;
+          e.newDocument.documentElement.classList.toggle('nav-back', back);
+          // Navigating in-site to the homepage: skip the splash on the INCOMING document so
+          // the navbar and towers are already in their final position in the slide snapshot.
+          // Otherwise the snapshot captures .app.is-intro (navbar translated off-screen) and
+          // the bar appears to slide away then snap back once stage.ts settles it.
+          var app = e.newDocument.getElementById('app');
+          if (app && app.classList.contains('is-intro')){
+            app.classList.remove('is-intro');
+            app.classList.add('no-splash', 'is-settled', 'is-revealed');
+          }
         });
       })();
     </script>
   </head>
   <body>
     <slot />
+    {!Astro.url.pathname.startsWith('/staff') && <ZeffyFrame />}
   </body>
 </html>

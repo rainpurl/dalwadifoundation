@@ -55,3 +55,28 @@ export async function deleteDocBlob(env, id) {
   if (!env.DALWADI_KV) return;
   await env.DALWADI_KV.delete("doc:" + id);
 }
+
+// ---- Photo gallery (About page) ----
+// Order-preserving metadata in "gallery"; image bytes in "gimg:<id>".
+export async function getGallery(env) {
+  if (!env.DALWADI_KV) return [];
+  const raw = await env.DALWADI_KV.get("gallery");
+  if (!raw) return [];
+  try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return []; }
+}
+export async function putGallery(env, list) {
+  if (!env.DALWADI_KV) throw new Error("KV not bound");
+  await env.DALWADI_KV.put("gallery", JSON.stringify(Array.isArray(list) ? list : []));
+}
+export async function putGalleryBlob(env, id, buf) {
+  if (!env.DALWADI_KV) throw new Error("KV not bound");
+  await env.DALWADI_KV.put("gimg:" + id, buf);
+}
+export async function getGalleryBlob(env, id) {
+  if (!env.DALWADI_KV) return null;
+  return await env.DALWADI_KV.get("gimg:" + id, { type: "arrayBuffer" });
+}
+export async function deleteGalleryBlob(env, id) {
+  if (!env.DALWADI_KV) return;
+  await env.DALWADI_KV.delete("gimg:" + id);
+}

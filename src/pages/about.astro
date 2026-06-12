@@ -8,6 +8,11 @@ const team = (site as any).team || [];
 <Page title={`About · ${site.name}`}>
   <a slot="corner-tr" class="metal metal--sm staff-link" href="/staff" data-astro-reload>Staff login</a>
 
+  <!-- Side photo galleries: filled at runtime from /api/gallery (live.ts). Fixed to the left
+       and right whitespace; hidden on narrow screens. Decorative, so hidden from assistive tech. -->
+  <div class="gallery gallery--left" aria-hidden="true"><div class="gallery__track" id="gallery-left"></div></div>
+  <div class="gallery gallery--right" aria-hidden="true"><div class="gallery__track" id="gallery-right"></div></div>
+
   <p class="kicker" data-c="about.kicker">{a.kicker}</p>
   <h1 class="title" data-c="about.title">{a.title}</h1>
   <p class="lede" data-c="about.lede">{a.lede}</p>

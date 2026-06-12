@@ -255,6 +255,14 @@ a{ color: inherit; }
 .foundation__logo img{ height: clamp(26px, 4.6vw, 40px); width: auto; display: block; }
 .app .foundation__logo{ visibility: hidden; }
 .foundation .metal{ justify-self: center; font-size: clamp(.9rem, 2.4vw, 1rem); padding: .66em 1.15em; }
+/* Persistent donation iframe (ZeffyFrame.astro): preloaded once and hidden everywhere, shown
+   only on the Support page (the one that renders .embed-wrap) so it opens with no buffer. */
+#zeffy-frame{
+  position: fixed; left: 0; top: 0; width: 100vw; height: calc(100svh - var(--nav-h));
+  border: 0; background: #003566; z-index: 5;
+  opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .4s ease;
+}
+html:has(.embed-wrap) #zeffy-frame{ opacity: 1; visibility: visible; pointer-events: auto; }
 
 /* Avoid a font swap on the splash wordmark: keep it hidden until Cormorant is
    ready. An inline head script removes .fonts-loading once the font loads (and after a
@@ -496,3 +504,50 @@ html.content-loading .page .content{ opacity: 0; }
 @keyframes slide-in-right  { from { transform: translateX(100%); }   to { transform: translateX(0); } }
 @keyframes slide-out-right { from { transform: translateX(0); }      to { transform: translateX(100%); } }
 @keyframes slide-in-left   { from { transform: translateX(-100%); }  to { transform: translateX(0); } }
+
+/* =========================================================
+   ABOUT PAGE SIDE GALLERIES
+   Two vertical strips of slowly scrolling, slightly tilted photos in the left/right
+   whitespace. Filled at runtime by live.ts from /api/gallery. Hovering a photo pauses
+   that side and expands the photo. Hidden where there is no room for side columns.
+   ========================================================= */
+/* Lets a hovered photo grow inward over the page without ever adding a horizontal scrollbar. */
+html{ overflow-x: clip; }
+.gallery{
+  position: fixed; top: 0; bottom: var(--nav-h); width: clamp(118px, 13vw, 190px);
+  z-index: 1; pointer-events: none;
+}
+.gallery--left{ left: 0; }
+.gallery--right{ right: 0; }
+.gallery__track{
+  display: flex; flex-direction: column; gap: clamp(14px, 2vw, 26px);
+  padding: 22px clamp(10px, 1.4vw, 20px);
+  animation: gallery-scroll 85s linear infinite; will-change: transform;
+}
+.gallery--right .gallery__track{ animation-duration: 102s; } /* desync the two sides */
+/* Pause this side while any of its photos is hovered (the container is click-through). */
+.gallery__track:has(.gimg:hover){ animation-play-state: paused; }
+.gimg{
+  position: relative; width: 100%; height: auto; display: block; border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(8,16,38,.28); pointer-events: auto;
+  transform: rotate(var(--rot, 0deg)); transform-origin: center center;
+  transition: transform .45s var(--ease), box-shadow .45s ease;
+}
+.gimg:hover{
+  transform: scale(1.6) rotate(0deg); z-index: 6;
+  box-shadow: 0 22px 52px rgba(8,16,38,.46);
+}
+@keyframes gallery-scroll{ from { transform: translateY(0); } to { transform: translateY(-50%); } }
+@media (max-width: 1200px){ .gallery{ display: none; } }
+@media (prefers-reduced-motion: reduce){ .gallery__track{ animation: none; } }
+
+/* Staff gallery manager (inside the About sheet): square thumbnails with a remove button. */
+.gallery-admin__grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; margin-top: 6px; }
+.gthumb{ position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: rgba(255,255,255,.06); }
+.gthumb img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+.gthumb__x{
+  position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; line-height: 20px;
+  border: 0; border-radius: 50%; background: rgba(8,16,38,.74); color: #fff; font-size: 15px;
+  cursor: pointer; padding: 0; text-align: center;
+}
+.gthumb__x:hover{ background: #cf4b4b; }

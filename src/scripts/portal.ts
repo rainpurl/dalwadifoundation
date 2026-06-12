@@ -167,11 +167,18 @@
       field('Body (one paragraph per line)', 'a-body', (a.body || []).join('\n\n'), true) +
       '<h3>Team / About us</h3><div id="team-list"></div>' +
       '<div class="sheet__row"><button type="button" class="metal metal--sm" id="add-member">+ Add member</button></div>' +
+      '<h3>Photo gallery</h3>' +
+      '<p class="note">Shown along the sides of the About page. Up to 30 photos, 5 MB each. Photos are optimized to AVIF in your browser before upload when it is supported. Changes here save immediately.</p>' +
+      '<div id="gallery-grid" class="gallery-admin"><p class="note">Loading…</p></div>' +
+      '<div class="field"><label>Add photos</label><input id="gallery-file" type="file" accept="image/*" multiple></div>' +
+      '<div class="sheet__row"><button type="button" class="metal metal--sm" id="gallery-add">Add photos</button></div>' +
       '<div class="sheet__row"><button type="button" class="metal metal--dark" id="save">Save</button>' +
       '<button type="button" class="metal metal--sm" id="cancel">Cancel</button></div>');
     renderTeam(state.content.team || []);
     document.getElementById('cancel')!.addEventListener('click', closeSheet);
     document.getElementById('add-member')!.addEventListener('click', function(){ var t = readTeam(); t.push({ name: '', title: '', photo: '', bio: '' }); renderTeam(t); });
+    loadGalleryAdmin();
+    document.getElementById('gallery-add')!.addEventListener('click', uploadGalleryFiles);
     document.getElementById('save')!.addEventListener('click', function(){
       state.content.about = {
         kicker: a.kicker || 'About',
@@ -403,6 +410,92 @@
     if (n < 1024) return n + ' B';
     if (n < 1048576) return Math.round(n / 1024) + ' KB';
     return (n / 1048576).toFixed(1) + ' MB';
+  }
+
+  // ---------- GALLERY (About page photos) ----------
+  function loadGalleryAdmin(){
+    var box = document.getElementById('gallery-grid'); if (!box) return;
+    api('/api/gallery').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      renderGalleryAdmin((d && d.gallery) || []);
+    }).catch(function(){ if (box) box.innerHTML = '<p class="note">Could not load photos.</p>'; });
+  }
+  function renderGalleryAdmin(arr: any[]){
+    var box = document.getElementById('gallery-grid'); if (!box) return;
+    box.setAttribute('data-count', String(arr.length));
+    var count = '<p class="note">' + arr.length + ' / 30 photos</p>';
+    if (!arr.length){ box.innerHTML = count + '<p class="note">No photos yet.</p>'; return; }
+    box.innerHTML = count + '<div class="gallery-admin__grid">' + arr.map(function(g: any){
+      return '<div class="gthumb" data-id="' + esc(g.id) + '">' +
+        '<img src="/api/gallery/' + encodeURIComponent(g.id) + '" alt="" loading="lazy">' +
+        '<button type="button" class="gthumb__x" data-id="' + esc(g.id) + '" aria-label="Remove photo">\u00d7</button>' +
+      '</div>';
+    }).join('') + '</div>';
+    Array.prototype.forEach.call(box.querySelectorAll('.gthumb__x'), function(b: any){
+      b.addEventListener('click', function(){ deleteGalleryImg(b.getAttribute('data-id')); });
+    });
+  }
+  function deleteGalleryImg(id: string){
+    if (!id) return;
+    api('/api/gallery?id=' + encodeURIComponent(id), { method: 'DELETE' }).then(function(r){
+      if (r.ok){ toast('Removed'); loadGalleryAdmin(); } else { toast('Could not remove'); }
+    }).catch(function(){ toast('Could not remove'); });
+  }
+  // Re-encode a photo to AVIF in the browser (falls back to WebP, then the original file) and
+  // shrink very large images, so stored photos stay small and quick to load.
+  function toAvif(file: File, cb: (blob: Blob, type: string) => void){
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var maxDim = 1600;
+      var w = img.naturalWidth || 1, h = img.naturalHeight || 1;
+      var scale = Math.min(1, maxDim / Math.max(w, h));
+      var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+      var canvas = document.createElement('canvas'); canvas.width = cw; canvas.height = ch;
+      var ctx = canvas.getContext('2d');
+      if (!ctx){ cb(file, file.type || 'image/jpeg'); return; }
+      ctx.drawImage(img, 0, 0, cw, ch);
+      canvas.toBlob(function(avif){
+        if (avif && avif.type === 'image/avif'){ cb(avif, 'image/avif'); return; }
+        canvas.toBlob(function(webp){
+          if (webp && webp.type === 'image/webp'){ cb(webp, 'image/webp'); return; }
+          cb(file, file.type || 'image/jpeg'); // last resort: upload as-is
+        }, 'image/webp', 0.85);
+      }, 'image/avif', 0.6);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); cb(file, file.type || 'image/jpeg'); };
+    img.src = url;
+  }
+  function uploadOneGallery(blob: Blob, type: string, baseName: string, done: () => void){
+    var ext = type === 'image/avif' ? 'avif' : type === 'image/webp' ? 'webp' : ((baseName.split('.').pop() || 'jpg'));
+    var fd = new FormData();
+    fd.append('file', blob, (baseName.replace(/\.[^.]+$/, '') || 'photo') + '.' + ext);
+    // No api() helper: let the browser set the multipart boundary.
+    fetch('/api/gallery', { method: 'POST', credentials: 'same-origin', body: fd }).then(function(r){
+      if (!r.ok){ r.json().then(function(j){ toast((j && j.message) || 'Upload failed'); }).catch(function(){ toast('Upload failed'); }); }
+      done();
+    }).catch(function(){ toast('Upload failed'); done(); });
+  }
+  function uploadGalleryFiles(){
+    var input = document.getElementById('gallery-file') as HTMLInputElement;
+    var files = input && input.files ? Array.prototype.slice.call(input.files) : [];
+    if (!files.length){ toast('Choose photos first'); return; }
+    var gbox = document.getElementById('gallery-grid');
+    var current = gbox ? (+(gbox.getAttribute('data-count') || '0') || 0) : 0;
+    var remaining = Math.max(0, 30 - current);
+    var tooBig = files.filter(function(f: File){ return f.size > 5 * 1024 * 1024; });
+    var ok = files.filter(function(f: File){ return f.size <= 5 * 1024 * 1024; });
+    if (tooBig.length) toast(tooBig.length + ' photo(s) over 5 MB were skipped');
+    if (ok.length > remaining){ ok = ok.slice(0, remaining); toast('Only ' + remaining + ' more photo(s) fit'); }
+    if (!ok.length){ input.value = ''; if (remaining === 0) toast('The gallery is full (30 photos)'); return; }
+    toast('Adding photos\u2026');
+    var i = 0;
+    function next(){
+      if (i >= ok.length){ input.value = ''; loadGalleryAdmin(); return; }
+      var f = ok[i++];
+      toAvif(f, function(blob, type){ uploadOneGallery(blob, type, f.name, next); });
+    }
+    next();
   }
 
   // ---------- helpers ----------
