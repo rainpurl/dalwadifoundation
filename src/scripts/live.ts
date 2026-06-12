@@ -61,6 +61,24 @@
     if (!data){ reveal(); return; }
     if (data.settings && data.settings.font) applyFont(data.settings.font);
     if (data.settings && data.settings.logo) applyLogo(data.settings.logo);
+    // Homepage announcement bar
+    var ann = document.getElementById('announce');
+    if (ann){
+      var an: any = data.settings && data.settings.announcement;
+      var atext = an && typeof an.text === 'string' ? an.text.trim() : '';
+      if (atext){
+        ann.textContent = atext;
+        var ahref = an && typeof an.href === 'string' ? an.href.trim() : '';
+        if (ahref) ann.setAttribute('href', ahref); else ann.removeAttribute('href');
+        ann.removeAttribute('hidden');
+      } else {
+        ann.setAttribute('hidden', '');
+        ann.removeAttribute('href');
+      }
+    }
+    // Copyright year (About / Support footer)
+    var yr = String(new Date().getFullYear());
+    Array.prototype.forEach.call(document.querySelectorAll('.cr-year'), function(el){ (el as HTMLElement).textContent = yr; });
     Array.prototype.forEach.call(document.querySelectorAll('[data-c]'), function(el){
       var path = el.getAttribute('data-c'); var v = get(data, path);
       if (path.split('.').pop() === 'body') setBody(el, v); else setText(el, v);
@@ -100,6 +118,25 @@
           if (!link) return;
           if (parts[2] === 'href') el.setAttribute('href', link.href); else setText(el, link.label);
         });
+        // Rebuild this pillar's hidden impact cards so the impact subpage reflects edits.
+        var imp = tw.querySelector('.tower__impact');
+        if (imp && Array.isArray(p.impact)){
+          imp.innerHTML = '';
+          p.impact.forEach(function(c: any){
+            if (!c) return;
+            var card = document.createElement('div');
+            if (c.text){
+              card.className = 'icard icard--text';
+              var pp = document.createElement('p'); pp.textContent = c.text; card.appendChild(pp);
+            } else {
+              card.className = 'icard';
+              var st = document.createElement('span'); st.className = 'icard__stat'; st.textContent = c.stat || '';
+              var lb = document.createElement('span'); lb.className = 'icard__label'; lb.textContent = c.label || '';
+              card.appendChild(st); card.appendChild(lb);
+            }
+            imp.appendChild(card);
+          });
+        }
       });
       // About page: rebuild the pillar cards from the same data so they stay in sync with
       // the columns, including when a pillar is added or removed in the portal.

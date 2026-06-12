@@ -259,7 +259,7 @@ a{ color: inherit; }
 /* Persistent donation iframe (ZeffyFrame.astro): preloaded once and hidden everywhere, shown
    only on the Support page (the one that renders .embed-wrap) so it opens with no buffer. */
 #zeffy-frame{
-  position: fixed; left: 0; top: 0; width: 100vw; height: calc(100svh - var(--nav-h));
+  position: fixed; left: 0; top: 0; width: 100vw; height: calc(100svh - var(--nav-h) - 30px);
   border: 0; background: #003566; z-index: 5;
   opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .4s ease;
 }
@@ -575,3 +575,73 @@ html{ overflow-x: clip; }
 .rt-editor:focus{ outline: 2px solid rgba(12,26,64,.35); outline-offset: 1px; }
 .rt-editor a{ color: var(--navy); text-decoration: underline; }
 .rt-editor:empty::before{ content: 'Write here, then select text to format.'; color: var(--ink-soft); opacity: .55; }
+
+/* =========================================================
+   IMPACT SUBPAGE (opened from a pillar's "Our impact" button)
+   ========================================================= */
+/* The non-active pillars fly out to the sides; the chosen one is centered by stage.ts. */
+.app.is-impact .tower.fly-l{ transform: translateX(-128vw) !important; opacity: 0; pointer-events: none; }
+.app.is-impact .tower.fly-r{ transform: translateX(128vw) !important; opacity: 0; pointer-events: none; }
+.app.is-impact .announce{ opacity: 0; pointer-events: none; }
+.impact{
+  position: fixed; inset: 0; z-index: 35; display: flex; justify-content: center;
+  padding: clamp(54px,8vh,96px) clamp(20px,6vw,80px) calc(var(--nav-h) + 28px);
+  overflow-y: auto; opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .5s ease; background: rgba(233,239,247,.97);
+}
+.app.is-impact .impact{ opacity: 1; visibility: visible; pointer-events: auto; }
+.impact__inner{ width: 100%; max-width: 1040px; text-align: center; margin: auto 0; }
+.impact__close{
+  position: fixed; top: 16px; right: 16px; width: 42px; height: 42px; border-radius: 50%;
+  border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer;
+}
+.impact__close:hover{ background: var(--sky); }
+.impact__kicker{ margin: 0 0 .5em; font-size: .78rem; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); }
+.impact__title{ margin: 0 0 .28em; font-family: var(--font); font-weight: 600; font-size: clamp(2rem,5.5vw,3.1rem); color: var(--navy); }
+.impact__body{ margin: 0 auto 2em; max-width: 620px; font-size: clamp(1.02rem,2.3vw,1.2rem); line-height: 1.6; color: var(--ink-soft); }
+.impact__cards{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: clamp(14px,2vw,24px); }
+.icard{
+  background: linear-gradient(160deg,#ffffff 0%,#eef3fa 100%); border: 1px solid var(--line);
+  border-radius: 16px; padding: clamp(20px,3vw,30px); min-height: 132px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .35em;
+  box-shadow: 0 16px 36px -22px rgba(12,26,64,.5);
+}
+.icard__stat{ font-family: var(--font); font-weight: 600; font-size: clamp(2rem,4.6vw,2.9rem); line-height: 1; color: var(--navy); }
+.icard__label{ font-size: .95rem; line-height: 1.4; color: var(--ink-soft); }
+.icard--text{ grid-column: 1 / -1; align-items: flex-start; justify-content: flex-start; text-align: left; }
+.icard--text p{ margin: 0; font-size: 1.05rem; line-height: 1.65; color: var(--ink-soft); }
+.app.is-impact .impact__cards .icard{ animation: icard-in .5s var(--ease) both; animation-delay: calc(var(--k,0) * .07s + .12s); }
+@keyframes icard-in{ from{ opacity: 0; transform: translateY(24px) scale(.96); } to{ opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce){
+  .app.is-impact .impact__cards .icard{ animation: none; }
+  .app.is-impact .tower.fly-l, .app.is-impact .tower.fly-r{ transition: none; }
+}
+
+/* Homepage announcement bar (very top edge, full width) */
+.announce{
+  position: fixed; top: 0; left: 0; right: 0; z-index: 45; display: block; text-align: center;
+  padding: 8px 46px; text-decoration: none; font-size: .9rem; line-height: 1.35; color: var(--ivory);
+  background: linear-gradient(90deg,#122a55,#1f3563); box-shadow: 0 2px 10px -4px rgba(8,16,40,.6);
+  transition: opacity .3s ease;
+}
+.announce[href]:hover{ text-decoration: underline; }
+.announce[hidden]{ display: none; }
+
+/* About / Support copyright */
+.page-cr{ margin: 3.2em 0 0; text-align: center; font-size: .8rem; color: var(--ink-soft); }
+.page-cr--embed{
+  position: fixed; left: 0; right: 0; bottom: var(--nav-h); height: 30px; margin: 0; z-index: 6;
+  display: flex; align-items: center; justify-content: center; pointer-events: none;
+  color: rgba(246,243,234,.7); font-size: .78rem;
+}
+
+/* Studio credit at the very bottom of the staff portal */
+.studio-credit{ display: block; text-align: center; margin: 44px 0 16px; text-decoration: none; font-size: .76rem; letter-spacing: .05em; color: var(--ink-soft); opacity: .55; transition: opacity .25s ease; }
+.studio-credit:hover{ opacity: .85; }
+
+/* Impact card editor rows (Pillars sheet) */
+.impacts{ margin-bottom: 8px; }
+.impactrow{ display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: start; margin-bottom: 8px; }
+.impactrow[data-ct="text"]{ grid-template-columns: 1fr auto; }
+.impactrow input, .impactrow textarea{ width: 100%; }
+.impactrow textarea{ min-height: 60px; }

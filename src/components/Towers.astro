@@ -17,9 +17,10 @@ import { pillars } from '../data/pillars';
           <h2 class="tp__title" id={`${p.key}-title`} data-p={`${p.key}.title`}>{p.title}</h2>
           <p class="tp__body" data-p={`${p.key}.body`}>{p.body}</p>
           <div class="tp__actions">
+            <button class="metal metal--dark metal--sm impact-btn" type="button" data-impact-open={p.key} aria-haspopup="dialog">Our impact</button>
             {p.links.map((l, j) => (
               <a
-                class={l.ghost ? 'metal metal--sm' : 'metal metal--dark metal--sm'}
+                class="metal metal--sm"
                 href={l.href}
                 data-plink={`${p.key}.${j}.href`}
                 target="_blank"
@@ -29,6 +30,15 @@ import { pillars } from '../data/pillars';
               </a>
             ))}
           </div>
+        </div>
+
+        <!-- Impact cards for this pillar (hidden data holder; cloned into the impact subpage on open, patched by live.ts) -->
+        <div class="tower__impact" data-impact-cards={p.key} hidden>
+          {(p.impact || []).map((c) => (
+            c.text
+              ? <div class="icard icard--text"><p>{c.text}</p></div>
+              : <div class="icard"><span class="icard__stat">{c.stat}</span><span class="icard__label">{c.label}</span></div>
+          ))}
         </div>
 
         <button class="tower__btn" type="button" aria-expanded="false" aria-controls={`panel-${p.key}`} aria-label={`${p.name} pillar`}>

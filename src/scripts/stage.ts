@@ -85,7 +85,7 @@
       var restTilt = function(){ for (var k = 0; k < towers.length; k++) setTilt(towers[k], '-10deg', '50%'); };
       var hoverTest = function(){
         hraf = 0;
-        if (!app!.classList.contains('is-revealed') || app!.classList.contains('is-intro')){ clearHover(); restTilt(); return; }
+        if (!app!.classList.contains('is-revealed') || app!.classList.contains('is-intro') || app!.classList.contains('is-impact')){ clearHover(); restTilt(); return; }
         var halfW = (window.innerWidth / 2) || 1, hit: any = null;
         for (var i = 0; i < towers.length; i++){
           var r = towers[i].getBoundingClientRect();
@@ -116,6 +116,53 @@
       }, { signal: signal });
     }
 
+    // ---- impact subpage: a pillar's "Our impact" button flies the others out, centers this
+    //      pillar, and reveals an editable spread of cards (filled from this pillar). ----
+    var impactEl = document.getElementById('impact');
+    var impactClose = document.getElementById('impact-close');
+    function towerByKey(k: string){ for (var i = 0; i < towers.length; i++){ if (towers[i].getAttribute('data-pillar') === k) return towers[i]; } return null; }
+    function closeImpact(){
+      app!.classList.remove('is-impact'); app!.removeAttribute('data-impact');
+      towers.forEach(function(t: any){ t.classList.remove('is-impact-active', 'fly-l', 'fly-r'); t.style.transform = ''; });
+      if (impactEl) impactEl.setAttribute('aria-hidden', 'true');
+    }
+    function openImpact(key: string){
+      var active = towerByKey(key); if (!active) return;
+      closeTowers();
+      var ai = towers.indexOf(active);
+      towers.forEach(function(t: any, i: number){
+        t.classList.remove('is-impact-active', 'fly-l', 'fly-r'); t.style.transform = '';
+        if (t === active) t.classList.add('is-impact-active');
+        else t.classList.add(i < ai ? 'fly-l' : 'fly-r');
+      });
+      if (!isPhone()){
+        var r = active.getBoundingClientRect();
+        active.style.transform = 'translateX(' + ((window.innerWidth / 2) - (r.left + r.width / 2)).toFixed(1) + 'px)';
+      }
+      var panel = active.querySelector('.tower__panel');
+      var titleEl = document.getElementById('impact-title');
+      var bodyEl = document.getElementById('impact-body');
+      var cardsEl = document.getElementById('impact-cards');
+      var t1 = panel && panel.querySelector('.tp__title');
+      var b1 = panel && panel.querySelector('.tp__body');
+      if (titleEl) titleEl.textContent = (t1 && t1.textContent) || '';
+      if (bodyEl) bodyEl.textContent = (b1 && b1.textContent) || '';
+      var holder = active.querySelector('.tower__impact');
+      if (cardsEl){
+        cardsEl.innerHTML = holder ? holder.innerHTML : '';
+        Array.prototype.forEach.call(cardsEl.children, function(c: any, i: number){ c.style.setProperty('--k', String(i)); });
+      }
+      app!.classList.add('is-impact'); app!.setAttribute('data-impact', key);
+      if (impactEl){ impactEl.setAttribute('aria-hidden', 'false'); impactEl.scrollTop = 0; }
+    }
+    if (impactClose) impactClose.addEventListener('click', closeImpact, { signal: signal });
+    document.addEventListener('click', function(e: any){
+      var btn = e.target && e.target.closest ? e.target.closest('[data-impact-open]') : null;
+      if (!btn) return;
+      e.preventDefault();
+      openImpact(btn.getAttribute('data-impact-open'));
+    }, { signal: signal });
+
     // ---- keyboard aria (CSS :focus-within drives the sink) ----
     towers.forEach(function(t: any){
       var b = t.querySelector('.tower__btn'); if (!b) return;
@@ -124,7 +171,7 @@
     });
     var closeBtn = document.getElementById('pillar-modal-close');
     if (closeBtn) closeBtn.addEventListener('click', closeTowers, { signal: signal });
-    document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ clearHover(); closeTowers(); } }, { signal: signal });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ clearHover(); closeImpact(); closeTowers(); } }, { signal: signal });
   }
 
   if (!(window as any).__stageWired){ (window as any).__stageWired = true; document.addEventListener('astro:page-load', init); }

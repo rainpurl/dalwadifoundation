@@ -75,6 +75,7 @@
         tile('about', 'About page', 'Edit the About story') +
         tile('contribute', 'Contribute', 'Opens Zeffy donations in a new tab') +
         tile('docs', 'Official Documents', 'Upload PDFs, DOCs, or links') +
+        tile('announce', 'Announcements', 'Banner across the top of the homepage') +
         tile('dev', 'Dev tools', 'Status &amp; authorized users', true) +
       '</div>';
     rebindMetal();
@@ -82,6 +83,7 @@
     root.querySelector('[data-tile=about]')!.addEventListener('click', openAbout);
     root.querySelector('[data-tile=contribute]')!.addEventListener('click', function(){ window.open('https://www.zeffy.com', '_blank', 'noopener'); });
     root.querySelector('[data-tile=docs]')!.addEventListener('click', openDocs);
+    root.querySelector('[data-tile=announce]')!.addEventListener('click', openAnnouncements);
     root.querySelector('[data-tile=dev]')!.addEventListener('click', openDev);
   }
   function tile(key: string, t: string, d: string, dark?: boolean){
@@ -121,13 +123,29 @@
         '<label>Links</label><div class="links">' +
           (p.links || []).map(function(l: any, j: number){ return linkRow(l, j); }).join('') +
         '</div>' +
-        '<div class="sheet__row"><button type="button" class="metal metal--sm add-link">+ Link</button>' +
-        '<button type="button" class="metal metal--sm rm-pillar" style="color:#cf4b4b">Remove pillar</button></div>' +
+        '<div class="sheet__row"><button type="button" class="metal metal--sm add-link">+ Link</button></div>' +
+        '<label>Impact cards</label>' +
+        '<p class="note">Number cards (a stat and a label) and text cards (a paragraph), shown on the impact subpage for this pillar.</p>' +
+        '<div class="impacts">' +
+          (p.impact || []).map(function(c: any, k: number){ return impactRow(c, k); }).join('') +
+        '</div>' +
+        '<div class="sheet__row"><button type="button" class="metal metal--sm add-impact-stat">+ Number card</button>' +
+        '<button type="button" class="metal metal--sm add-impact-text">+ Text card</button></div>' +
+        '<div class="sheet__row"><button type="button" class="metal metal--sm rm-pillar" style="color:#cf4b4b">Remove pillar</button></div>' +
       '</div>';
     }).join('');
     rebindMetal();
     Array.prototype.forEach.call(box.querySelectorAll('.add-link'), function(b: any){
       b.addEventListener('click', function(){ var arr2 = readPillars(); var i = +b.closest('.subblock').getAttribute('data-pi'); arr2[i].links.push({ label: '', href: '', ghost: false }); renderPillars(arr2); });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.add-impact-stat'), function(b: any){
+      b.addEventListener('click', function(){ var arr2 = readPillars(); var i = +b.closest('.subblock').getAttribute('data-pi'); (arr2[i].impact = arr2[i].impact || []).push({ stat: '', label: '' }); renderPillars(arr2); });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.add-impact-text'), function(b: any){
+      b.addEventListener('click', function(){ var arr2 = readPillars(); var i = +b.closest('.subblock').getAttribute('data-pi'); (arr2[i].impact = arr2[i].impact || []).push({ text: '' }); renderPillars(arr2); });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.rm-impact'), function(b: any){
+      b.addEventListener('click', function(){ var arr2 = readPillars(); var i = +b.closest('.subblock').getAttribute('data-pi'); arr2[i].impact.splice(+b.getAttribute('data-ik'), 1); renderPillars(arr2); });
     });
     Array.prototype.forEach.call(box.querySelectorAll('.rm-pillar'), function(b: any){
       b.addEventListener('click', function(){ var arr2 = readPillars(); arr2.splice(+b.closest('.subblock').getAttribute('data-pi'), 1); renderPillars(arr2); });
@@ -142,6 +160,18 @@
       '<input data-lf="href" placeholder="https://" value="' + esc(l.href) + '">' +
       '<button type="button" class="btn-x rm-link" data-j="' + j + '">remove</button></div>';
   }
+  function impactRow(c: any, k: number){
+    var isText = c && c.text !== undefined && c.stat === undefined && c.label === undefined;
+    if (isText){
+      return '<div class="impactrow" data-ik="' + k + '" data-ct="text">' +
+        '<textarea data-if="text" placeholder="Paragraph of impact text">' + esc(c.text) + '</textarea>' +
+        '<button type="button" class="btn-x rm-impact" data-ik="' + k + '">remove</button></div>';
+    }
+    return '<div class="impactrow" data-ik="' + k + '" data-ct="stat">' +
+      '<input data-if="stat" placeholder="Stat (e.g. $250K)" value="' + esc(c && c.stat) + '">' +
+      '<input data-if="label" placeholder="Label (e.g. Communities reached)" value="' + esc(c && c.label) + '">' +
+      '<button type="button" class="btn-x rm-impact" data-ik="' + k + '">remove</button></div>';
+  }
   function readPillars(){
     return Array.prototype.map.call(document.querySelectorAll('#pillars-list .subblock'), function(b: any){
       var f: any = {};
@@ -150,11 +180,33 @@
         var lab = row.querySelector('[data-lf=label]').value, href = row.querySelector('[data-lf=href]').value;
         return { label: lab, href: href };
       }).filter(function(l: any){ return l.label || l.href; });
+      var impact = Array.prototype.map.call(b.querySelectorAll('.impacts .impactrow'), function(row: any){
+        if (row.getAttribute('data-ct') === 'text'){ var t = row.querySelector('[data-if=text]'); return { text: t ? t.value : '' }; }
+        var s = row.querySelector('[data-if=stat]'), l = row.querySelector('[data-if=label]');
+        return { stat: s ? s.value : '', label: l ? l.value : '' };
+      }).filter(function(c: any){ return (c.text && c.text.trim()) || (c.stat && c.stat.trim()) || (c.label && c.label.trim()); });
       // Keep the existing key stable so live.ts can still match this pillar by its
       // baked data-p key after a rename. Only derive a key when none exists yet (a
       // brand-new pillar, which needs a rebuild to appear as a column anyway).
       var key = b.getAttribute('data-key') || (f.name || 'pillar').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'pillar';
-      return { key: key, name: f.name, title: f.title, body: f.body, links: links };
+      return { key: key, name: f.name, title: f.title, body: f.body, links: links, impact: impact };
+    });
+  }
+
+  // ---------- ANNOUNCEMENTS ----------
+  function openAnnouncements(){
+    var a: any = (state.content.settings && state.content.settings.announcement) || {};
+    openSheet('<h2>Announcements</h2>' +
+      '<p class="note">Shows as a bar across the very top of the homepage. Clear the text to hide the bar.</p>' +
+      field('Announcement text', 'ann-text', a.text || '', true) +
+      field('Link (optional, https://...)', 'ann-href', a.href || '') +
+      '<div class="sheet__row"><button type="button" class="metal metal--dark" id="save">Save</button>' +
+      '<button type="button" class="metal metal--sm" id="cancel">Cancel</button></div>');
+    document.getElementById('cancel')!.addEventListener('click', closeSheet);
+    document.getElementById('save')!.addEventListener('click', function(){
+      state.content.settings = state.content.settings || {};
+      state.content.settings.announcement = { text: val('ann-text').trim(), href: val('ann-href').trim() };
+      saveContent(closeSheet);
     });
   }
 
