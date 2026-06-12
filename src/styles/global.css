@@ -591,11 +591,9 @@ html{ overflow-x: clip; }
 }
 .app.is-impact .impact{ opacity: 1; visibility: visible; pointer-events: auto; }
 .impact__inner{ width: 100%; max-width: 1040px; text-align: center; margin: auto 0; }
-.impact__close{
-  position: fixed; top: 16px; right: 16px; width: 42px; height: 42px; border-radius: 50%;
-  border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer;
-}
-.impact__close:hover{ background: var(--sky); }
+.impact__back{ position: fixed; top: 18px; left: 18px; z-index: 2; width: 3em; height: 3em; }
+/* While the impact subpage is open, the site title shrinks up to the very top. */
+.app.is-impact .wordmark{ transform: translate(-50%, calc(-50% - 45svh)) scale(.42); transition: transform .55s var(--ease); }
 .impact__kicker{ margin: 0 0 .5em; font-size: .78rem; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); }
 .impact__title{ margin: 0 0 .28em; font-family: var(--font); font-weight: 600; font-size: clamp(2rem,5.5vw,3.1rem); color: var(--navy); }
 .impact__body{ margin: 0 auto 2em; max-width: 620px; font-size: clamp(1.02rem,2.3vw,1.2rem); line-height: 1.6; color: var(--ink-soft); }
