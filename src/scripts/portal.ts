@@ -260,7 +260,17 @@
       return '<div class="subblock" data-mi="' + i + '">' +
         '<div class="field"><label>Name</label><input data-mf="name" value="' + esc(m.name) + '"></div>' +
         '<div class="field"><label>Title</label><input data-mf="title" value="' + esc(m.title) + '"></div>' +
-        '<div class="field"><label>Photo URL (optional)</label><input data-mf="photo" value="' + esc(m.photo) + '" placeholder="https://…"></div>' +
+        '<div class="field"><label>Headshot (optional)</label>' +
+          '<div class="hs">' +
+            '<img class="hs__prev" alt="" ' + (m.photo ? 'src="' + esc(m.photo) + '"' : 'style="display:none"') + '>' +
+            '<div class="hs__ctl">' +
+              '<input type="file" class="hs__file" accept="image/*">' +
+              '<button type="button" class="metal metal--sm hs__clear"' + (m.photo ? '' : ' hidden') + '>Remove</button>' +
+            '</div>' +
+          '</div>' +
+          '<input type="hidden" data-mf="photo" value="' + esc(m.photo || '') + '">' +
+          '<p class="note">Uploaded and optimized to AVIF in your browser (WebP/JPEG where AVIF is not supported). Saved when you press Save below.</p>' +
+        '</div>' +
         '<div class="field"><label>Short bio</label><textarea data-mf="bio">' + esc(m.bio) + '</textarea></div>' +
         '<div class="sheet__row"><button type="button" class="metal metal--sm rm-member" style="color:#cf4b4b">Remove member</button></div>' +
       '</div>';
@@ -268,6 +278,28 @@
     rebindMetal();
     Array.prototype.forEach.call(box.querySelectorAll('.rm-member'), function(b: any){
       b.addEventListener('click', function(){ var t = readTeam(); t.splice(+b.closest('.subblock').getAttribute('data-mi'), 1); renderTeam(t); });
+    });
+    // Headshot upload per member: convert in the browser, then store the result as a data URL
+    // in the hidden photo field (which readTeam picks up and saveContent persists).
+    Array.prototype.forEach.call(box.querySelectorAll('.subblock'), function(block: any){
+      var fileEl = block.querySelector('.hs__file') as HTMLInputElement;
+      var hidden = block.querySelector('input[data-mf="photo"]') as HTMLInputElement;
+      var prev = block.querySelector('.hs__prev') as HTMLImageElement;
+      var clr = block.querySelector('.hs__clear') as HTMLButtonElement;
+      if (fileEl) fileEl.addEventListener('change', function(){
+        var f = fileEl.files && fileEl.files[0]; if (!f) return;
+        if (f.size > 10 * 1024 * 1024){ toast('Image too large (10 MB max)'); fileEl.value = ''; return; }
+        toast('Optimizing\u2026');
+        toAvif(f, function(blob){
+          blobToDataURL(blob, function(durl){
+            hidden.value = durl; prev.src = durl; prev.style.display = '';
+            if (clr) clr.hidden = false; fileEl.value = ''; toast('Headshot ready (press Save)');
+          });
+        }, 400);
+      });
+      if (clr) clr.addEventListener('click', function(){
+        hidden.value = ''; prev.removeAttribute('src'); prev.style.display = 'none'; clr.hidden = true;
+      });
     });
   }
   function readTeam(){
@@ -560,16 +592,23 @@
       if (r.ok){ toast('Removed'); loadGalleryAdmin(); } else { toast('Could not remove'); }
     }).catch(function(){ toast('Could not remove'); });
   }
-  // Re-encode a photo to AVIF in the browser (falls back to WebP, then the original file) and
-  // shrink very large images, so stored photos stay small and quick to load.
-  function toAvif(file: File, cb: (blob: Blob, type: string) => void){
+  // Read a Blob into a data: URL (used to embed a team headshot directly into the saved content).
+  function blobToDataURL(blob: Blob, cb: (url: string) => void){
+    var fr = new FileReader();
+    fr.onload = function(){ cb(String(fr.result)); };
+    fr.onerror = function(){ toast('Could not read that image'); };
+    fr.readAsDataURL(blob);
+  }
+  // Re-encode a photo to AVIF in the browser (falls back to WebP, then a resized JPEG) and
+  // shrink large images, so stored photos stay small and quick to load. maxDim defaults to 1600.
+  function toAvif(file: File, cb: (blob: Blob, type: string) => void, maxDim?: number){
     var url = URL.createObjectURL(file);
     var img = new Image();
     img.onload = function(){
       URL.revokeObjectURL(url);
-      var maxDim = 1600;
+      var md = maxDim || 1600;
       var w = img.naturalWidth || 1, h = img.naturalHeight || 1;
-      var scale = Math.min(1, maxDim / Math.max(w, h));
+      var scale = Math.min(1, md / Math.max(w, h));
       var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
       var canvas = document.createElement('canvas'); canvas.width = cw; canvas.height = ch;
       var ctx = canvas.getContext('2d');
@@ -579,7 +618,10 @@
         if (avif && avif.type === 'image/avif'){ cb(avif, 'image/avif'); return; }
         canvas.toBlob(function(webp){
           if (webp && webp.type === 'image/webp'){ cb(webp, 'image/webp'); return; }
-          cb(file, file.type || 'image/jpeg'); // last resort: upload as-is
+          canvas.toBlob(function(jpg){
+            if (jpg){ cb(jpg, 'image/jpeg'); return; }
+            cb(file, file.type || 'image/jpeg'); // absolute last resort
+          }, 'image/jpeg', 0.85);
         }, 'image/webp', 0.85);
       }, 'image/avif', 0.6);
     };
@@ -587,7 +629,7 @@
     img.src = url;
   }
   function uploadOneGallery(blob: Blob, type: string, baseName: string, done: () => void){
-    var ext = type === 'image/avif' ? 'avif' : type === 'image/webp' ? 'webp' : ((baseName.split('.').pop() || 'jpg'));
+    var ext = type === 'image/avif' ? 'avif' : type === 'image/webp' ? 'webp' : type === 'image/jpeg' ? 'jpg' : ((baseName.split('.').pop() || 'jpg'));
     var fd = new FormData();
     fd.append('file', blob, (baseName.replace(/\.[^.]+$/, '') || 'photo') + '.' + ext);
     // No api() helper: let the browser set the multipart boundary.
