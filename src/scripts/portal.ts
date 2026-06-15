@@ -290,12 +290,15 @@
         var f = fileEl.files && fileEl.files[0]; if (!f) return;
         if (f.size > 10 * 1024 * 1024){ toast('Image too large (10 MB max)'); fileEl.value = ''; return; }
         toast('Optimizing\u2026');
-        toAvif(f, function(blob){
-          blobToDataURL(blob, function(durl){
-            hidden.value = durl; prev.src = durl; prev.style.display = '';
-            if (clr) clr.hidden = false; fileEl.value = ''; toast('Headshot ready (press Save)');
-          });
-        }, 400);
+        toAvif(f, function(blob, type){
+          uploadHeadshot(blob, type, function(url){
+            hidden.value = url; prev.src = url; prev.style.display = '';
+            if (clr) clr.hidden = false; fileEl.value = ''; toast('Headshot uploaded (press Save)');
+          }, function(){ toast('Upload failed. Please try again.'); fileEl.value = ''; });
+        }, 400, function(){
+          toast('Could not read that image. Please use a JPG or PNG.');
+          fileEl.value = '';
+        });
       });
       if (clr) clr.addEventListener('click', function(){
         hidden.value = ''; prev.removeAttribute('src'); prev.style.display = 'none'; clr.hidden = true;
@@ -592,16 +595,25 @@
       if (r.ok){ toast('Removed'); loadGalleryAdmin(); } else { toast('Could not remove'); }
     }).catch(function(){ toast('Could not remove'); });
   }
-  // Read a Blob into a data: URL (used to embed a team headshot directly into the saved content).
-  function blobToDataURL(blob: Blob, cb: (url: string) => void){
-    var fr = new FileReader();
-    fr.onload = function(){ cb(String(fr.result)); };
-    fr.onerror = function(){ toast('Could not read that image'); };
-    fr.readAsDataURL(blob);
+  // Upload a converted headshot blob to KV and get back its small same-origin URL. The team
+  // member stores this URL (not a giant data URL), so the content stays tiny and the image is
+  // served like the gallery photos.
+  function uploadHeadshot(blob: Blob, type: string, cb: (url: string) => void, fail: () => void){
+    var ext = type === 'image/avif' ? 'avif' : type === 'image/webp' ? 'webp' : type === 'image/png' ? 'png' : 'jpg';
+    var fd = new FormData();
+    fd.append('file', blob, 'headshot.' + ext);
+    fetch('/api/headshot', { method: 'POST', credentials: 'same-origin', body: fd })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j: any){ if (j && j.url){ cb(j.url); } else { fail(); } })
+      .catch(function(){ fail(); });
   }
   // Re-encode a photo to AVIF in the browser (falls back to WebP, then a resized JPEG) and
   // shrink large images, so stored photos stay small and quick to load. maxDim defaults to 1600.
-  function toAvif(file: File, cb: (blob: Blob, type: string) => void, maxDim?: number){
+  function toAvif(file: File, cb: (blob: Blob, type: string) => void, maxDim?: number, onFail?: () => void){
+    // fail() runs when the image cannot be decoded or encoded (e.g. an iPhone HEIC in a browser
+    // that cannot read it). Headshots pass onFail to reject it; the gallery omits onFail and keeps
+    // the original file. This stops an unreadable file from being stored as a broken image.
+    function fail(){ if (onFail){ onFail(); } else { cb(file, file.type || 'image/jpeg'); } }
     var url = URL.createObjectURL(file);
     var img = new Image();
     img.onload = function(){
@@ -612,20 +624,20 @@
       var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
       var canvas = document.createElement('canvas'); canvas.width = cw; canvas.height = ch;
       var ctx = canvas.getContext('2d');
-      if (!ctx){ cb(file, file.type || 'image/jpeg'); return; }
+      if (!ctx){ fail(); return; }
       ctx.drawImage(img, 0, 0, cw, ch);
       canvas.toBlob(function(avif){
         if (avif && avif.type === 'image/avif'){ cb(avif, 'image/avif'); return; }
         canvas.toBlob(function(webp){
           if (webp && webp.type === 'image/webp'){ cb(webp, 'image/webp'); return; }
           canvas.toBlob(function(jpg){
-            if (jpg){ cb(jpg, 'image/jpeg'); return; }
-            cb(file, file.type || 'image/jpeg'); // absolute last resort
+            if (jpg){ cb(jpg, jpg.type || 'image/jpeg'); return; }
+            fail();
           }, 'image/jpeg', 0.85);
         }, 'image/webp', 0.85);
       }, 'image/avif', 0.6);
     };
-    img.onerror = function(){ URL.revokeObjectURL(url); cb(file, file.type || 'image/jpeg'); };
+    img.onerror = function(){ URL.revokeObjectURL(url); fail(); };
     img.src = url;
   }
   function uploadOneGallery(blob: Blob, type: string, baseName: string, done: () => void){

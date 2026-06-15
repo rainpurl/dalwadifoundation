@@ -91,3 +91,21 @@ export async function putGallerySpeed(env, n) {
   if (!env.DALWADI_KV) throw new Error("KV not bound");
   await env.DALWADI_KV.put("gallery-speed", String(n));
 }
+
+// ---- Team headshots (About page) ----
+// Each headshot is a single image blob in "hs:<id>"; its content-type rides in KV metadata.
+// No public list is needed: a member references its headshot directly via /api/headshot/<id>.
+export async function putHeadshotBlob(env, id, buf, contentType) {
+  if (!env.DALWADI_KV) throw new Error("KV not bound");
+  await env.DALWADI_KV.put("hs:" + id, buf, { metadata: { contentType: contentType || "image/jpeg" } });
+}
+export async function getHeadshot(env, id) {
+  if (!env.DALWADI_KV) return null;
+  const res = await env.DALWADI_KV.getWithMetadata("hs:" + id, { type: "arrayBuffer" });
+  if (!res || !res.value) return null;
+  return { buf: res.value, contentType: (res.metadata && res.metadata.contentType) || "image/jpeg" };
+}
+export async function deleteHeadshotBlob(env, id) {
+  if (!env.DALWADI_KV) return;
+  await env.DALWADI_KV.delete("hs:" + id);
+}
