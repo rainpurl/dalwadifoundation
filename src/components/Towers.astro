@@ -15,7 +15,7 @@ import { pillars } from '../data/pillars';
       <div class="tower" data-pillar={p.key} data-i={i} style={`--i:${i}`}>
         <div class="tower__panel" id={`panel-${p.key}`} role="group" aria-labelledby={`${p.key}-title`}>
           <h2 class="tp__title" id={`${p.key}-title`} data-p={`${p.key}.title`}>{p.title}</h2>
-          <p class="tp__body" data-p={`${p.key}.body`}>{p.body}</p>
+          <div class="tp__body prose" data-p={`${p.key}.body`}>{p.body}</div>
           <div class="tp__actions">
             <button class="metal metal--dark metal--sm impact-btn" type="button" data-impact-open={p.key} aria-haspopup="dialog">Our impact</button>
             {p.links.map((l, j) => (

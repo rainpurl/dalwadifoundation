@@ -25,7 +25,7 @@ const team = (site as any).team || [];
     {pillars.map((p) => (
       <div class="pcard">
         <h3>{p.title}</h3>
-        <p>{p.body}</p>
+        <div class="pcard__body prose">{p.body}</div>
       </div>
     ))}
   </div>
@@ -39,7 +39,7 @@ const team = (site as any).team || [];
         </div>
         <h3 class="member__name">{m.name}</h3>
         <p class="member__title">{m.title}</p>
-        <p class="member__bio">{m.bio}</p>
+        <div class="member__bio prose">{m.bio}</div>
       </article>
     ))}
   </div>

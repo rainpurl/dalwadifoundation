@@ -4,10 +4,15 @@
   "use strict";
   function get(obj: any, path: string){ return path.split('.').reduce(function(o, k){ return (o == null ? o : o[k]); }, obj); }
   function setText(el: Element, v: any){ if (typeof v === 'string') (el as HTMLElement).textContent = v; }
-  function setBody(el: Element, arr: any){
-    if (!Array.isArray(arr)) return;
-    el.innerHTML = '';
-    arr.forEach(function(p){ if (typeof p !== 'string') return; var n = document.createElement('p'); n.textContent = p; el.appendChild(n); });
+  function looksHtml(s: any){ return /<[a-z][\s\S]*>/i.test(typeof s === 'string' ? s : ''); }
+  function setRich(el: Element, v: any){ if (v == null) return; var s = String(v); if (looksHtml(s)) (el as HTMLElement).innerHTML = sanitizeRich(s); else (el as HTMLElement).textContent = s; }
+  function setBody(el: Element, v: any){
+    if (Array.isArray(v)){
+      el.innerHTML = '';
+      v.forEach(function(p){ if (typeof p !== 'string') return; var n = document.createElement('p'); n.textContent = p; el.appendChild(n); });
+    } else if (typeof v === 'string'){
+      (el as HTMLElement).innerHTML = sanitizeRich(v);
+    }
   }
   function applyFont(f: any){
     if (!f || !f.stack) return;
@@ -36,7 +41,7 @@
   function sanitizeRich(html: string){
     var root = new DOMParser().parseFromString(html || '', 'text/html').body;
     if (!root) return '';
-    var ok: any = { B: 1, STRONG: 1, I: 1, EM: 1, U: 1, A: 1, P: 1, BR: 1, SPAN: 1 };
+    var ok: any = { H1: 1, H2: 1, H3: 1, B: 1, STRONG: 1, I: 1, EM: 1, U: 1, A: 1, P: 1, BR: 1, SPAN: 1, UL: 1, OL: 1, LI: 1, DIV: 1 };
     Array.prototype.slice.call(root.querySelectorAll('*')).forEach(function(el: any){
       if (!el.parentNode) return;
       if (!ok[el.tagName]){
@@ -98,10 +103,11 @@
       secBox.innerHTML = '';
       data.about.sections.forEach(function(s: any){
         if (!s) return;
-        if (s.heading){ var h = document.createElement('h2'); h.className = 'section-h'; h.textContent = s.heading; secBox.appendChild(h); }
-        var body = document.createElement('div'); body.className = 'prose section-prose';
+        var card = document.createElement('section'); card.className = 'about-card';
+        if (s.heading){ var h = document.createElement('h2'); h.className = 'about-card__h'; h.textContent = s.heading; card.appendChild(h); }
+        var body = document.createElement('div'); body.className = 'prose about-card__body';
         body.innerHTML = sanitizeRich(s.html || '');
-        secBox.appendChild(body);
+        card.appendChild(body); secBox.appendChild(card);
       });
     }
     if (Array.isArray(data.pillars)){
@@ -114,7 +120,8 @@
         var p = byKey[tw.getAttribute('data-pillar')] || data.pillars[+tw.getAttribute('data-i')];
         if (!p) return;
         Array.prototype.forEach.call(tw.querySelectorAll('[data-p]'), function(el: any){
-          setText(el, p[el.getAttribute('data-p').split('.').pop()]);
+          var key = el.getAttribute('data-p').split('.').pop();
+          if (key === 'body') setRich(el, p.body); else setText(el, p[key]);
         });
         Array.prototype.forEach.call(tw.querySelectorAll('[data-plink]'), function(el: any){
           var parts = el.getAttribute('data-plink').split('.'); var link = p.links && p.links[+parts[1]];
@@ -130,7 +137,7 @@
             var card = document.createElement('div');
             if (c.text){
               card.className = 'icard icard--text';
-              var pp = document.createElement('p'); pp.textContent = c.text; card.appendChild(pp);
+              var pp = document.createElement('div'); pp.className = 'prose'; setRich(pp, c.text); card.appendChild(pp);
             } else {
               card.className = 'icard';
               var st = document.createElement('span'); st.className = 'icard__stat'; st.textContent = c.stat || '';
@@ -150,7 +157,7 @@
           if (!p) return;
           var card = document.createElement('div'); card.className = 'pcard';
           var h = document.createElement('h3'); h.textContent = p.title || '';
-          var b = document.createElement('p'); b.textContent = p.body || '';
+          var b = document.createElement('div'); b.className = 'pcard__body prose'; setRich(b, p.body || '');
           card.appendChild(h); card.appendChild(b); grid.appendChild(card);
         });
       }
@@ -166,7 +173,7 @@
           else { var sp = document.createElement('span'); sp.className = 'member__ph'; sp.setAttribute('aria-hidden', 'true'); ph.appendChild(sp); }
           var nm = document.createElement('h3'); nm.className = 'member__name'; nm.textContent = (m && m.name) || '';
           var ti = document.createElement('p'); ti.className = 'member__title'; ti.textContent = (m && m.title) || '';
-          var bi = document.createElement('p'); bi.className = 'member__bio'; bi.textContent = (m && m.bio) || '';
+          var bi = document.createElement('div'); bi.className = 'member__bio prose'; setRich(bi, (m && m.bio) || '');
           art.appendChild(ph); art.appendChild(nm); art.appendChild(ti); art.appendChild(bi);
           tbox.appendChild(art);
         });

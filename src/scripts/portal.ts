@@ -4,6 +4,16 @@
   "use strict";
   var root = document.getElementById('portal-root');
   if (!root) return;
+  // One delegated handler powers the formatting toolbar in every editor (present or future).
+  try { document.execCommand('styleWithCSS', false, false); } catch (e) {}
+  document.addEventListener('mousedown', function(e: any){
+    var t = e.target; var b = t && t.closest ? t.closest('.rt-btn') : null; if (!b) return;
+    e.preventDefault();
+    var cmd = b.getAttribute('data-cmd');
+    if (cmd === 'h1' || cmd === 'h2'){ document.execCommand('formatBlock', false, '<' + cmd + '>'); return; }
+    if (cmd === 'createLink'){ var url = prompt('Link URL (https://...)'); if (url) document.execCommand('createLink', false, url); return; }
+    if (cmd) document.execCommand(cmd, false);
+  });
   var OWNER = "pjbrahm369@gmail.com";
   var state: any = { me: null, content: null, users: [] };
 
@@ -119,7 +129,7 @@
       return '<div class="subblock" data-pi="' + i + '" data-key="' + esc(p.key || '') + '">' +
         '<div class="field"><label>Name (tower label)</label><input data-f="name" value="' + esc(p.name) + '"></div>' +
         '<div class="field"><label>Title</label><input data-f="title" value="' + esc(p.title) + '"></div>' +
-        '<div class="field"><label>Body</label><textarea data-f="body">' + esc(p.body) + '</textarea></div>' +
+        rtField('Body', 'data-f="body"', toEditorHtml(p.body)) +
         '<label>Links</label><div class="links">' +
           (p.links || []).map(function(l: any, j: number){ return linkRow(l, j); }).join('') +
         '</div>' +
@@ -164,7 +174,7 @@
     var isText = c && c.text !== undefined && c.stat === undefined && c.label === undefined;
     if (isText){
       return '<div class="impactrow" data-ik="' + k + '" data-ct="text">' +
-        '<textarea data-if="text" placeholder="Paragraph of impact text">' + esc(c.text) + '</textarea>' +
+        '<div class="rt-wrap">' + rtToolbar() + '<div class="rt-editor" contenteditable="true" data-if="text">' + toEditorHtml(c.text) + '</div></div>' +
         '<button type="button" class="btn-x rm-impact" data-ik="' + k + '">remove</button></div>';
     }
     return '<div class="impactrow" data-ik="' + k + '" data-ct="stat">' +
@@ -175,13 +185,13 @@
   function readPillars(){
     return Array.prototype.map.call(document.querySelectorAll('#pillars-list .subblock'), function(b: any){
       var f: any = {};
-      Array.prototype.forEach.call(b.querySelectorAll('[data-f]'), function(el: any){ f[el.getAttribute('data-f')] = el.value; });
+      Array.prototype.forEach.call(b.querySelectorAll('[data-f]'), function(el: any){ f[el.getAttribute('data-f')] = el.isContentEditable ? el.innerHTML : el.value; });
       var links = Array.prototype.map.call(b.querySelectorAll('.linkrow'), function(row: any){
         var lab = row.querySelector('[data-lf=label]').value, href = row.querySelector('[data-lf=href]').value;
         return { label: lab, href: href };
       }).filter(function(l: any){ return l.label || l.href; });
       var impact = Array.prototype.map.call(b.querySelectorAll('.impacts .impactrow'), function(row: any){
-        if (row.getAttribute('data-ct') === 'text'){ var t = row.querySelector('[data-if=text]'); return { text: t ? t.value : '' }; }
+        if (row.getAttribute('data-ct') === 'text'){ var t = row.querySelector('[data-if=text]') as any; return { text: t ? (t.isContentEditable ? t.innerHTML : t.value) : '' }; }
         var s = row.querySelector('[data-if=stat]'), l = row.querySelector('[data-if=label]');
         return { stat: s ? s.value : '', label: l ? l.value : '' };
       }).filter(function(c: any){ return (c.text && c.text.trim()) || (c.stat && c.stat.trim()) || (c.label && c.label.trim()); });
@@ -216,7 +226,7 @@
     openSheet('<h2>About page</h2>' +
       field('Title', 'a-title', a.title) +
       field('Lede', 'a-lede', a.lede, true) +
-      field('Body (one paragraph per line)', 'a-body', (a.body || []).join('\n\n'), true) +
+      rtField('Body', 'id="a-body"', toEditorHtml(a.body)) +
       '<h3>Team / About us</h3><div id="team-list"></div>' +
       '<div class="sheet__row"><button type="button" class="metal metal--sm" id="add-member">+ Add member</button></div>' +
       '<h3>Custom sections</h3>' +
@@ -247,7 +257,7 @@
       state.content.about = {
         kicker: a.kicker || 'About',
         title: val('a-title'), lede: val('a-lede'),
-        body: val('a-body').split(/\n\s*\n/).map(function(s){ return s.trim(); }).filter(Boolean),
+        body: richVal('a-body'),
         sections: readSections(),
       };
       state.content.team = readTeam();
@@ -271,7 +281,7 @@
           '<input type="hidden" data-mf="photo" value="' + esc(m.photo || '') + '">' +
           '<p class="note">Uploaded and optimized to AVIF in your browser (WebP/JPEG where AVIF is not supported). Saved when you press Save below.</p>' +
         '</div>' +
-        '<div class="field"><label>Short bio</label><textarea data-mf="bio">' + esc(m.bio) + '</textarea></div>' +
+        rtField('Short bio', 'data-mf="bio"', toEditorHtml(m.bio)) +
         '<div class="sheet__row"><button type="button" class="metal metal--sm rm-member" style="color:#cf4b4b">Remove member</button></div>' +
       '</div>';
     }).join('');
@@ -308,7 +318,7 @@
   function readTeam(){
     return Array.prototype.map.call(document.querySelectorAll('#team-list .subblock'), function(b: any){
       var m: any = {};
-      Array.prototype.forEach.call(b.querySelectorAll('[data-mf]'), function(el: any){ m[el.getAttribute('data-mf')] = el.value; });
+      Array.prototype.forEach.call(b.querySelectorAll('[data-mf]'), function(el: any){ m[el.getAttribute('data-mf')] = el.isContentEditable ? el.innerHTML : el.value; });
       return m;
     });
   }
@@ -317,32 +327,11 @@
     box.innerHTML = arr.map(function(s: any, i: number){
       return '<div class="subblock rt-block" data-si="' + i + '">' +
         '<div class="field"><label>Heading (optional)</label><input data-sf="heading" value="' + esc(s.heading) + '"></div>' +
-        '<label class="rt-label">Content</label>' +
-        '<div class="rt-toolbar">' +
-          '<button type="button" class="rt-btn" data-cmd="bold" title="Bold"><b>B</b></button>' +
-          '<button type="button" class="rt-btn" data-cmd="italic" title="Italic"><i>I</i></button>' +
-          '<button type="button" class="rt-btn" data-cmd="underline" title="Underline"><u>U</u></button>' +
-          '<button type="button" class="rt-btn" data-cmd="createLink" title="Add link">Link</button>' +
-          '<button type="button" class="rt-btn" data-cmd="unlink" title="Remove link">Unlink</button>' +
-        '</div>' +
-        '<div class="rt-editor" contenteditable="true" data-sf="html">' + (s.html || '') + '</div>' +
+        rtField('Content', 'data-sf="html"', s.html || '') +
         '<div class="sheet__row"><button type="button" class="metal metal--sm rm-section" style="color:#cf4b4b">Remove section</button></div>' +
       '</div>';
     }).join('');
     rebindMetal();
-    // Toolbar: mousedown (not click) so the editor keeps its text selection; execCommand acts on it.
-    Array.prototype.forEach.call(box.querySelectorAll('.rt-btn'), function(b: any){
-      b.addEventListener('mousedown', function(e: MouseEvent){
-        e.preventDefault();
-        var cmd = b.getAttribute('data-cmd');
-        if (cmd === 'createLink'){
-          var url = prompt('Link URL (https://...)');
-          if (url) document.execCommand('createLink', false, url);
-        } else {
-          document.execCommand(cmd, false);
-        }
-      });
-    });
     Array.prototype.forEach.call(box.querySelectorAll('.rm-section'), function(b: any){
       b.addEventListener('click', function(){ var s = readSections(); s.splice(+b.closest('.rt-block').getAttribute('data-si'), 1); renderSections(s); });
     });
@@ -361,7 +350,7 @@
     openSheet('<h2>Contribute page</h2>' +
       field('Title', 'c-title', c.title) +
       field('Lede', 'c-lede', c.lede, true) +
-      field('Body (one paragraph per line)', 'c-body', (c.body || []).join('\n\n'), true) +
+      rtField('Body', 'id="c-body"', toEditorHtml(c.body)) +
       field('Donate URL', 'c-donate', c.donateUrl) +
       field('Contact email', 'c-email', c.email) +
       '<div class="sheet__row"><button type="button" class="metal metal--dark" id="save">Save</button>' +
@@ -371,7 +360,7 @@
       state.content.contribute = {
         kicker: c.kicker || 'Support',
         title: val('c-title'), lede: val('c-lede'),
-        body: val('c-body').split(/\n\s*\n/).map(function(s){ return s.trim(); }).filter(Boolean),
+        body: richVal('c-body'),
         donateUrl: val('c-donate'), email: val('c-email'),
       };
       saveContent(closeSheet);
@@ -673,6 +662,31 @@
   }
 
   // ---------- helpers ----------
+  function rtToolbar(){
+    return '<div class="rt-toolbar">' +
+      '<button type="button" class="rt-btn" data-cmd="bold" title="Bold"><b>B</b></button>' +
+      '<button type="button" class="rt-btn" data-cmd="italic" title="Italic"><i>I</i></button>' +
+      '<button type="button" class="rt-btn" data-cmd="underline" title="Underline"><u>U</u></button>' +
+      '<button type="button" class="rt-btn" data-cmd="h1" title="Heading">H1</button>' +
+      '<button type="button" class="rt-btn" data-cmd="h2" title="Subheading">H2</button>' +
+      '<button type="button" class="rt-btn" data-cmd="insertUnorderedList" title="Bulleted list">\u2022 List</button>' +
+      '<button type="button" class="rt-btn" data-cmd="insertOrderedList" title="Numbered list">1. List</button>' +
+      '<button type="button" class="rt-btn" data-cmd="createLink" title="Add link">Link</button>' +
+      '<button type="button" class="rt-btn" data-cmd="unlink" title="Remove link">Unlink</button>' +
+    '</div>';
+  }
+  function rtField(label: string, attrs: string, html: any){
+    return '<div class="field"><label class="rt-label">' + label + '</label>' + rtToolbar() +
+      '<div class="rt-editor" contenteditable="true" ' + attrs + '>' + (html || '') + '</div></div>';
+  }
+  function richVal(id: string){ var el = document.getElementById(id); return el ? (el as HTMLElement).innerHTML : ''; }
+  function toEditorHtml(v: any){
+    if (v == null) return '';
+    if (Array.isArray(v)) return v.map(function(par: any){ return '<p>' + esc(par) + '</p>'; }).join('');
+    var s = String(v);
+    if (/<[a-z][\s\S]*>/i.test(s)) return s;
+    return s.split(/\n\s*\n/).map(function(par: string){ return '<p>' + esc(par).replace(/\n/g, '<br>') + '</p>'; }).join('');
+  }
   function field(label: string, id: string, value: any, area?: boolean){
     return '<div class="field"><label>' + label + '</label>' +
       (area ? '<textarea id="' + id + '">' + esc(value) + '</textarea>' : '<input id="' + id + '" value="' + esc(value) + '">') + '</div>';

@@ -321,3 +321,20 @@ The recreate procedure is kept below for reference in case it's ever needed agai
 ## 12. Suggested message to start the next chat
 
 > I'm continuing work on The Dalwadi Foundation site. I've uploaded the full project zip and HANDOFF.md. Please read HANDOFF.md first, then confirm the build is green. Current status: [paste what you've done - e.g. "I pushed the latest batch and fixed the OAuth client ID; sign-in works now" or "still seeing Error 401 invalid_client on sign-in"]. Next I want to [your goal].
+
+## Changelog 2026-06-26: Rich text in the portal, About sections as cards
+
+What changed:
+- Shared formatting toolbar (Bold, Italic, Underline, H1, H2, bulleted list, numbered list, Link, Unlink) now on every prose field in the staff portal: pillar Body, pillar impact Text cards, team Short bio, About Body, About custom sections, Contribute Body. Single line fields stay plain (names, titles, link labels, URLs, stat numbers, ledes, page titles).
+- One delegated mousedown handler in portal.ts drives all toolbars (current and future editors). styleWithCSS is off, so formatting uses tags (b, i, u, h1, h2, ul, ol, li, a), not inline styles.
+- Prose fields now store HTML. Reads use el.isContentEditable to pick innerHTML vs value. About Body and Contribute Body save as a single HTML string (previously an array of paragraphs). Backward compatible: existing plain text and paragraph arrays still load into the editors and render correctly.
+- live.ts sanitizeRich whitelist expanded to allow H1, H2, H3, UL, OL, LI, DIV in addition to the existing inline tags. Links are still forced to target blank, rel noopener, and limited to https and mailto.
+- Public rendering switched to rich for the tower panel body, the About pillar cards body, team bios, and impact Text cards. Their containers changed from p to div.prose so headings and lists are valid. Contribute Body is stored but not shown on the Contribute page (Zeffy embed only), so no render change there.
+- About custom sections now render as cards (.about-card with .about-card__h and .about-card__body) instead of a bare heading plus prose.
+- global.css gained .prose block element rules (h1, h2, h3, ul, ol, li, strong, em), .about-card styling, and compact .prose overrides for the tight contexts.
+
+Files changed this round: src/scripts/portal.ts, src/scripts/live.ts, src/styles/global.css, src/pages/about.astro, src/components/Towers.astro.
+
+After deploy:
+- Re-paste the reformatted Hospitality With Purpose section content into its section box in the About editor.
+- Optional: open the About editor and Save once to migrate existing plain text bodies into formatted paragraphs. They render fine either way.
