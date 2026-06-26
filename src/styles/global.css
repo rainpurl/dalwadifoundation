@@ -751,3 +751,8 @@ input, textarea, [contenteditable="true"]{ cursor: text; }
 .pcard__body.prose h1{ font-size: 1.15rem; }
 .pcard__body.prose h2{ font-size: 1.02rem; }
 .icard--text .prose p{ margin: 0 0 .7em; font-size: 1.05rem; line-height: 1.65; color: var(--ink-soft); }
+
+
+/* Pillar editor: paste-to-import impact cards */
+.impact-import{ margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.ii-rep-lbl{ display: flex; align-items: center; gap: 6px; font-size: .86rem; color: var(--ink-soft); }
