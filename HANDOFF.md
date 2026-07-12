@@ -254,7 +254,7 @@ The recreate procedure is kept below for reference in case it's ever needed agai
 - **Team** in `src/data/site.ts` - currently three **Lorem Ipsum** placeholder members (no photos). To be filled in **later via the staff portal's About tile** (name, title, bio, headshot).
 - **Donate link** - `site.ts` `donateUrl: "#"` is still a placeholder. (Note: the portal's Contribute tile currently opens `zeffy.com`; reconcile this when finalizing the donate flow.)
 - **Contact email** - `site.ts` `email: "hello@dalwadi.org"` is still a placeholder.
-- **Logo** - the brand mark currently uses `public/logo.png` (a working/placeholder mark). The brief calls for a specific stylized capital **D**. Swap via the portal's Dev-tools logo uploader, or in code (upload to `public/`, edit `Brand.astro`, keep the `brandmark` class so the intro animation still works).
+- **Logo** - ✅ done. The brand mark is now `public/logo.svg` (silver **D** monogram with a royal-blue upright and a brick "foundation" motif, transparent background, viewBox 3509x2484, ~1.41:1). It is referenced by `Brand.astro` (homepage brandmark) and `Foundation.astro` (navbar center) and is the static default. A staff upload via Dev tools -> Replace the logo (SVG) still overrides it at runtime through KV `settings.logo` (see the 2026-07-12 changelog). Keep the `brandmark` class so the intro animation still works.
 
 ---
 
@@ -312,7 +312,7 @@ The recreate procedure is kept below for reference in case it's ever needed agai
 4. **Fix the staff sign-in** - resolve `Error 401: invalid_client` (verify `GOOGLE_CLIENT_ID` + redeploy; §10).
 5. **Set the live site font to IBM Plex Serif** via Dev tools → Site font box, because KV may still hold an older font (§10).
 6. **(Optional) Set up the Dev-tools status dots** (§5) - needs sign-in working first.
-7. **Finish content** (§7): team bios/photos (via portal), donate link, contact email, real logo. (Partner URLs done.)
+7. **Finish content** (§7): team bios/photos (via portal), donate link, contact email. (Partner URLs and logo done.)
 8. **Test and harden the auth/CMS loop** (§10) once sign-in works.
 9. **Custom domain → production:** move from `dalwadi-org.katr.es` to `dalwadi.org` when ready, and add the production OAuth redirect URI.
 
@@ -338,3 +338,22 @@ Files changed this round: src/scripts/portal.ts, src/scripts/live.ts, src/styles
 After deploy:
 - Re-paste the reformatted Hospitality With Purpose section content into its section box in the About editor.
 - Optional: open the About editor and Save once to migrate existing plain text bodies into formatted paragraphs. They render fine either way.
+
+## Changelog 2026-07-12: Brand logo (SVG) + display-name, mobile, and nav notes
+
+What changed this run:
+- **New brand logo.** `public/logo.svg` (silver **D** monogram with a royal-blue upright and a brick "foundation" motif; transparent background; viewBox 3509x2484, ~1.41:1) replaces the placeholder `public/logo.png` as the static default. `src="/logo.png"` was changed to `src="/logo.svg"` in `Brand.astro` (homepage brandmark) and `Foundation.astro` (navbar center); the portal logo-preview fallback in `portal.ts` was changed to `/logo.svg`.
+- **KV override still applies.** `live.ts` applies `settings.logo` from KV when present, which overrides the static default. So if the old mark still shows after this deploy, a logo was previously uploaded through the portal. To replace it there, sign in -> Dev tools -> Replace the logo (SVG) and upload the SVG (the portal reads SVG text and stores it, served at `/api/logo`, and writes `settings.logo` in KV). Deploys never write KV, so the static-default swap only shows when `settings.logo` is unset.
+- **Orphaned file.** `public/logo.png` stays in the repo (GitHub uploads never delete). It is now unreferenced; delete it by hand on github.com if you want it gone.
+- The SVG has a transparent background, so it reads on both the light homepage (brandmark settles at top over the sky) and the dark navbar (subpages). The silver is slightly low-contrast on the light homepage top; acceptable, but flag if a bolder top mark is wanted.
+
+Files changed this run: `public/logo.svg` (new), `src/components/Brand.astro`, `src/components/Foundation.astro`, `src/scripts/portal.ts`, `HANDOFF.md`.
+
+Supersedes earlier notes (the doc above predates the July 2026 work; where they conflict, this wins):
+- **Display name.** The site wordmark and page titles now read "Dalwadi Foundation" (the leading "The" was dropped in `site.ts`, `Base.astro`, `Page.astro`). The legal entity remains "The Dalwadi Foundation."
+- **Font.** The current site font is **Cormorant** (headings, and PDFs) with **Literata** for body copy. The older §9 "IBM Plex Serif" note is stale.
+- **Foundation bar order** is **About (left) | logo/Home (center) | Support (right)**; older notes listing Support-left are stale. The bar background is dark/frosted.
+- **Homepage brand split (swapped this session).** The logo (`.brandmark`) now settles at the **top** over the sky; the wordmark (`.wordmark`) settles into the bar. `is-impact` hides `.brandmark` (the top element).
+- **Mobile bar.** The wordmark is hidden in the footer bar on phones (still shown in the splash); the About/Support buttons sit at the outer edges. Desktop shows a larger top logo.
+- **Impact cards.** Each pillar editor has a paste-to-import box: `stat | label` makes a number card, `text: ...` makes a text card, with a Replace toggle. Impact content for all four pillars was drafted from the two donation CSVs and is entered through the portal (it lives in KV, never shipped in a deploy).
+- **Standing rules.** Title/sentence case with **no `text-transform: uppercase`** anywhere (this supersedes the earlier all-caps pillar-label note if the two conflict); **no em or en dashes** anywhere in code, comments, or content.
