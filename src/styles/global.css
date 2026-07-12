@@ -751,3 +751,13 @@ input, textarea, [contenteditable="true"]{ cursor: text; }
 .pcard__body.prose h1{ font-size: 1.15rem; }
 .pcard__body.prose h2{ font-size: 1.02rem; }
 .icard--text .prose p{ margin: 0 0 .7em; font-size: 1.05rem; line-height: 1.65; color: var(--ink-soft); }
+
+/* Homepage brand refinements: larger top logo on desktop, and on mobile the
+   bar buttons move to the outer edges so they clear the centered wordmark. */
+@media (min-width: 641px){
+  .app.is-settled .brandmark, .app.no-splash .brandmark{ transform: translate(-50%, calc(-50% - 37svh)) scale(1.3); }
+}
+@media (max-width: 640px){
+  .foundation > a:first-child{ justify-self: start; }
+  .foundation > a:last-child{ justify-self: end; }
+}
