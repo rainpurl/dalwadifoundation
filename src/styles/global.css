@@ -760,4 +760,6 @@ input, textarea, [contenteditable="true"]{ cursor: text; }
 @media (max-width: 640px){
   .foundation > a:first-child{ justify-self: start; }
   .foundation > a:last-child{ justify-self: end; }
+  /* Phones: the wordmark still shows in the splash but not in the footer bar */
+  .app.is-settled .wordmark, .app.no-splash .wordmark{ opacity: 0; visibility: hidden; }
 }
