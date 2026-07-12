@@ -310,25 +310,25 @@ html.fonts-loading .wordmark{ visibility: hidden; }
 .brandmark{
   height: clamp(46px, 8.5vw, 74px); width: auto; display: block;
   transform: translate(-50%, calc(-50% - 3.8rem)) scale(1);
-  transition: transform 1.15s var(--ease);
+  transition: transform 1.15s var(--ease), color 1.15s var(--ease);
 }
 .app.is-settled .brandmark{
-  transform: translate(-50%, calc(-50% + 50svh - var(--nav-mid))) scale(.62);
+  transform: translate(-50%, calc(-50% - 37svh)) scale(.8);
 }
 .wordmark{
   margin: 0; font-family: var(--font); font-weight: 600; font-size: clamp(1.82rem, 6.5vw, 3.77rem); line-height: 1.04;
   white-space: nowrap; color: var(--ink); letter-spacing: .01em;
   transform: translate(-50%, calc(-50% + 2.8rem)) scale(1);
-  transition: transform 1.15s var(--ease);
+  transition: transform 1.15s var(--ease), color 1.15s var(--ease);
   animation: brandIn 1s var(--ease-out) forwards .15s, settle 1.3s var(--ease-out) forwards;
 }
 @keyframes settle{ from{ letter-spacing:.12em; } to{ letter-spacing:.01em; } }
-.app.is-settled .wordmark{ transform: translate(-50%, calc(-50% - 37svh)) scale(.62); }
+.app.is-settled .wordmark{ transform: translate(-50%, calc(-50% + 50svh - var(--nav-mid))) scale(.55); color: var(--ivory); }
 
 /* returning to the homepage within a session: jump straight to the settled
    layout with no splash animation (stage.ts adds .no-splash) */
-.app.no-splash .brandmark{ opacity: 1; animation: none; transition: none; transform: translate(-50%, calc(-50% + 50svh - var(--nav-mid))) scale(.62); }
-.app.no-splash .wordmark{ opacity: 1; animation: none; transition: none; transform: translate(-50%, calc(-50% - 37svh)) scale(.62); }
+.app.no-splash .brandmark{ opacity: 1; animation: none; transition: none; transform: translate(-50%, calc(-50% - 37svh)) scale(.8); }
+.app.no-splash .wordmark{ opacity: 1; animation: none; transition: none; transform: translate(-50%, calc(-50% + 50svh - var(--nav-mid))) scale(.55); color: var(--ivory); }
 .app.no-splash .tower__rise{ transform: translateY(0); transition: none; }
 .app.no-splash .foundation{ opacity: 1; transform: translateY(0); transition: none; }
 .app.no-splash .tower__bob{ animation: bob 3.4s ease-in-out infinite; animation-delay: calc(var(--i) * -0.5s); }
@@ -623,7 +623,7 @@ html{ overflow-x: clip; }
 .impact__inner{ width: 100%; max-width: 1040px; text-align: center; margin: auto 0; }
 .impact__back{ position: fixed; top: 18px; left: 18px; z-index: 2; width: 3em; height: 3em; }
 /* The site title is hidden on the impact subpage (it could overlap the pillar title). */
-.app.is-impact .wordmark{ opacity: 0; visibility: hidden; pointer-events: none; }
+.app.is-impact .brandmark{ opacity: 0; visibility: hidden; pointer-events: none; }
 .impact__kicker{ margin: 0 0 .5em; font-size: .78rem; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); }
 .impact__title{ margin: 0 0 .28em; font-family: var(--font); font-weight: 600; font-size: clamp(2rem,5.5vw,3.1rem); color: var(--navy); }
 .impact__body{ margin: 0 auto 2em; max-width: 620px; font-size: clamp(1.02rem,2.3vw,1.2rem); line-height: 1.6; color: var(--ink-soft); }
@@ -751,8 +751,3 @@ input, textarea, [contenteditable="true"]{ cursor: text; }
 .pcard__body.prose h1{ font-size: 1.15rem; }
 .pcard__body.prose h2{ font-size: 1.02rem; }
 .icard--text .prose p{ margin: 0 0 .7em; font-size: 1.05rem; line-height: 1.65; color: var(--ink-soft); }
-
-
-/* Pillar editor: paste-to-import impact cards */
-.impact-import{ margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); }
-.ii-rep-lbl{ display: flex; align-items: center; gap: 6px; font-size: .86rem; color: var(--ink-soft); }

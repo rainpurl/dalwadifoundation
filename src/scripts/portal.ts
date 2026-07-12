@@ -141,11 +141,6 @@
         '</div>' +
         '<div class="sheet__row"><button type="button" class="metal metal--sm add-impact-stat">+ Number card</button>' +
         '<button type="button" class="metal metal--sm add-impact-text">+ Text card</button></div>' +
-        '<div class="field impact-import"><label>Import cards</label>' +
-          '<p class="note">Paste one card per line. Number card: stat | label. Text card: text: your paragraph. Tick replace to overwrite the cards above, leave it off to add to them.</p>' +
-          '<textarea class="ii-text" placeholder="35,000+ | toothbrushes donated"></textarea></div>' +
-        '<div class="sheet__row"><label class="ii-rep-lbl"><input type="checkbox" class="ii-rep"> Replace existing cards</label>' +
-          '<button type="button" class="metal metal--sm do-import">Import cards</button></div>' +
         '<div class="sheet__row"><button type="button" class="metal metal--sm rm-pillar" style="color:#cf4b4b">Remove pillar</button></div>' +
       '</div>';
     }).join('');
@@ -158,19 +153,6 @@
     });
     Array.prototype.forEach.call(box.querySelectorAll('.add-impact-text'), function(b: any){
       b.addEventListener('click', function(){ var arr2 = readPillars(); var i = +b.closest('.subblock').getAttribute('data-pi'); (arr2[i].impact = arr2[i].impact || []).push({ text: '' }); renderPillars(arr2); });
-    });
-    Array.prototype.forEach.call(box.querySelectorAll('.do-import'), function(b: any){
-      b.addEventListener('click', function(){
-        var sub = b.closest('.subblock'); var i = +sub.getAttribute('data-pi');
-        var ta = sub.querySelector('.ii-text') as HTMLTextAreaElement;
-        var rep = sub.querySelector('.ii-rep') as HTMLInputElement;
-        var cards = parseCards(ta ? ta.value : '');
-        if (!cards.length){ toast('Nothing to import'); return; }
-        var arr2 = readPillars(); arr2[i].impact = arr2[i].impact || [];
-        arr2[i].impact = (rep && rep.checked) ? cards : arr2[i].impact.concat(cards);
-        renderPillars(arr2);
-        toast('Imported ' + cards.length + ' card' + (cards.length === 1 ? '' : 's'));
-      });
     });
     Array.prototype.forEach.call(box.querySelectorAll('.rm-impact'), function(b: any){
       b.addEventListener('click', function(){ var arr2 = readPillars(); var i = +b.closest('.subblock').getAttribute('data-pi'); arr2[i].impact.splice(+b.getAttribute('data-ik'), 1); renderPillars(arr2); });
@@ -704,18 +686,6 @@
     var s = String(v);
     if (/<[a-z][\s\S]*>/i.test(s)) return s;
     return s.split(/\n\s*\n/).map(function(par: string){ return '<p>' + esc(par).replace(/\n/g, '<br>') + '</p>'; }).join('');
-  }
-  function parseCards(text: string){
-    var out: any[] = [];
-    String(text || '').split(/\r?\n/).forEach(function(raw: string){
-      var line = raw.trim(); if (!line) return;
-      var t = /^text\s*:/i.exec(line);
-      if (t){ out.push({ text: line.slice(t[0].length).trim() }); return; }
-      var bar = line.indexOf('|');
-      if (bar !== -1){ out.push({ stat: line.slice(0, bar).trim(), label: line.slice(bar + 1).trim() }); return; }
-      out.push({ text: line });
-    });
-    return out;
   }
   function field(label: string, id: string, value: any, area?: boolean){
     return '<div class="field"><label>' + label + '</label>' +
